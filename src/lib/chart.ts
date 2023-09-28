@@ -1,20 +1,20 @@
-import { Bounds, ChartOptions, DeepPartial, Point } from "./types";
-import {} from "./math";
 import { drawText } from "./graphics";
+import { remap } from "./math";
+import { ChartOptions, Data, DeepPartial, InputData } from "./types";
 
-export class Chart {
+export class ChartCandleStick {
   private options: ChartOptions;
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
 
-  private data: Point[] = [];
+  private data: Data[] = [];
 
   private margin = 20;
 
   constructor(private container: HTMLElement, options?: DeepPartial<ChartOptions>) {
     this.options = {
-      width: 600,
-      height: 400,
+      width: 1000,
+      height: 600,
       labels: ["time", "value"],
       layout: {
         textColor: "#333",
@@ -32,89 +32,88 @@ export class Chart {
     this.canvas.height = this.options.height;
     this.canvas.style.backgroundColor = this.options.layout.backgroundColor;
     this.container.appendChild(this.canvas);
-
     this.ctx = this.canvas.getContext("2d")!;
-
-    this.drawAxes();
   }
 
-  public setData(data: Point[]) {
-    this.data = data;
-    this.drawAxes();
-    // this.draw();
+  public setData(data: InputData[]): void {
+    this.data = data.map((d) => [new Date(d[0]), d[1], d[2], d[3], d[4]]);
+    this.draw();
   }
 
-  private drawAxes() {
-    this.ctx.strokeStyle = this.options.layout.textColor;
-    this.ctx.fillStyle = this.options.layout.textColor;
-    this.ctx.lineWidth = 1;
+  public addData(data: InputData): void {
+    this.data.push([new Date(data[0]), data[1], data[2], data[3], data[4]]);
+  }
 
-    this.ctx.beginPath();
-    this.ctx.moveTo(this.margin, this.canvas.height - this.margin);
-    this.ctx.lineTo(this.canvas.width - this.margin, this.canvas.height - this.margin);
-    this.ctx.stroke();
+  public draw(): void {
+    this.ctx.clearRect(0, 0, this.options.width, this.options.height);
 
-    this.ctx.beginPath();
-    this.ctx.moveTo(this.canvas.width - this.margin, this.canvas.height - this.margin);
-    this.ctx.lineTo(this.canvas.width - this.margin, this.margin);
-    this.ctx.stroke();
+    // Drawing the axes
+    this.drawAxes();
 
+    const yValues = this.data.flatMap((d) => [d[1], d[2], d[3], d[4]]);
+    const yMax = Math.max(...yValues);
+    const yMin = Math.min(...yValues);
+
+    const candleWidth = (this.options.width - 2 * this.margin) / this.data.length;
+
+    for (let i = 0; i < this.data.length; i++) {
+      const [date, open, close, high, low] = this.data[i];
+      const x = this.margin + i * candleWidth;
+
+      const yHigh = remap(yMax, yMin, this.margin, this.options.height - this.margin, high);
+      const yLow = remap(yMax, yMin, this.margin, this.options.height - this.margin, low);
+      const yOpen = remap(yMax, yMin, this.margin, this.options.height - this.margin, open);
+      const yClose = remap(yMax, yMin, this.margin, this.options.height - this.margin, close);
+
+      // Draw the candle body
+      this.ctx.fillStyle = open < close ? "#00ff00" : "#ff0000";
+      this.ctx.fillRect(x, yClose, candleWidth, yOpen - yClose);
+
+      // Draw the wicks
+      this.ctx.strokeStyle = "#000000"; // wicks are usually black
+      this.ctx.beginPath();
+      this.ctx.moveTo(x + candleWidth / 2, yLow);
+      this.ctx.lineTo(x + candleWidth / 2, yHigh);
+      this.ctx.stroke();
+    }
+  }
+
+  public drawAxes(): void {
+    // Drawing the x-axis (time)
     drawText(
       this.ctx,
       this.options.labels[0],
-      [this.canvas.width / 2, this.canvas.height - this.margin / 2],
+      [this.options.width / 2, this.options.height - this.margin / 2],
       {
         color: this.options.layout.textColor,
-        size: 14,
+        size: 12,
         align: "center",
         baseline: "middle",
-        fontFamily: "sans-serif",
-        fontWeight: "bold",
+        fontFamily: "Arial",
+        fontWeight: "normal",
       }
     );
 
-    this.ctx.save();
-    this.ctx.translate(this.canvas.width - this.margin / 2, this.canvas.height / 2);
-    this.ctx.rotate(-Math.PI / 2);
-    drawText(this.ctx, this.options.labels[1], [0, 0], {
+    this.ctx.strokeStyle = this.options.layout.lineColor;
+    this.ctx.beginPath();
+    this.ctx.moveTo(this.margin, this.options.height - this.margin);
+    this.ctx.lineTo(this.options.width - this.margin, this.options.height - this.margin);
+    this.ctx.stroke();
+
+    // Drawing the y-axis (price)
+    drawText(this.ctx, this.options.labels[1], [this.margin / 2, this.options.height / 2], {
       color: this.options.layout.textColor,
-      size: 14,
+      size: 12,
       align: "center",
       baseline: "middle",
-      fontFamily: "sans-serif",
-      fontWeight: "bold",
+      fontFamily: "Arial",
+      fontWeight: "normal",
     });
-    this.ctx.restore();
 
-    // draw min/max values
-    const bounds = this.getDataBounds();
-    const minX = bounds[0][0];
-    const maxX = bounds[1][0];
-    const minY = bounds[0][1];
-    const maxY = bounds[1][1];
-
-    drawText(this.ctx, `${minX}`, [this.margin, this.canvas.height - this.margin / 2], {
-      color: this.options.layout.textColor,
-      size: 14,
-      align: "center",
-      baseline: "middle",
-      fontFamily: "sans-serif",
-      fontWeight: "bold",
-    });
-  }
-
-  private getDataBounds(): Bounds {
-    const xValues = this.data.map((point) => point[0]);
-    const yValues = this.data.map((point) => point[1]);
-
-    const minX = Math.min(...xValues);
-    const maxX = Math.max(...xValues);
-    const minY = Math.min(...yValues);
-    const maxY = Math.max(...yValues);
-
-    return [
-      [minX, minY],
-      [maxX, maxY],
-    ];
+    this.ctx.strokeStyle = this.options.layout.lineColor;
+    this.ctx.beginPath();
+    this.ctx.moveTo(this.margin, this.margin);
+    this.ctx.lineTo(this.margin, this.options.height - this.margin);
+    this.ctx.stroke();
   }
 }

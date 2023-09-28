@@ -9,6 +9,9 @@ export type DeepPartial<T> = {
 export type Point = [number, number];
 export type Bounds = [Point, Point];
 
+export type InputData = [string, number, number, number, number];
+export type Data = [Date, number, number, number, number];
+
 export type GraphicsTextOptions = {
   color: string;
   size: number;
