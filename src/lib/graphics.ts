@@ -18,18 +18,13 @@ export function drawPoint(ctx: CanvasRenderingContext2D, point: Point, color: st
  * Draws text on a canvas context.
  * @param ctx - The canvas rendering context to draw on.
  * @param text - The text to draw.
- * @param point - The point on the canvas to draw the text at.
- * @param options - The options for the text drawing.
+ * @param location - The coordinates of the text.
+ * @param options - The options for the text.
  */
-export function drawText(
-  ctx: CanvasRenderingContext2D,
-  text: string,
-  point: Point,
-  options: GraphicsTextOptions
-) {
-  ctx.fillStyle = options.color;
-  ctx.font = `${options.fontWeight} ${options.size}px ${options.fontFamily}`;
+export function drawText(ctx: CanvasRenderingContext2D, text: string, location: Point, options: GraphicsTextOptions) {
   ctx.textAlign = options.align;
   ctx.textBaseline = options.baseline;
-  ctx.fillText(text, point[0], point[1]);
+  ctx.font = `${options.size}px ${options.fontFamily}`;
+  ctx.fillStyle = options.color;
+  ctx.fillText(text, location[0], location[1]);
 }
