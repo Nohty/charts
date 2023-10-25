@@ -1,4 +1,6 @@
-import { Bounds, ChartOptions, DataPoint, DeepPartial } from "./types";
+import { drawLine, drawPoint } from "./graphics";
+import { remapPoint } from "./math";
+import { Bounds, CandleStickOptions, ChartOptions, DataPoint, DeepPartial } from "./types";
 
 export class Chart {
   private options: ChartOptions;
@@ -69,8 +71,11 @@ export class Chart {
   }
 
   public draw(): void {
-    const candleStick = this.data[0];
-    candleStick.draw(this.getDataBounds(), this.margin);
+    for (const candleStick of this.data) {
+      candleStick.draw(this.getDataBounds(), this.getPixelBounds(), { radius: 2, width: 10 });
+    }
+
+    this.drawAxes();
   }
 
   public drawAxes(): void {}
@@ -83,5 +88,23 @@ class CandleStick {
     return this.data;
   }
 
-  public draw(bounds: Bounds, margin: number, width = 10): void {}
+  public draw(dataBounds: Bounds, pixelBounds: Bounds, options: CandleStickOptions): void {
+    const openLoc = remapPoint(dataBounds, pixelBounds, [this.data.time.getTime(), this.data.open]);
+    const closeLoc = remapPoint(dataBounds, pixelBounds, [this.data.time.getTime(), this.data.close]);
+    const highLoc = remapPoint(dataBounds, pixelBounds, [this.data.time.getTime(), this.data.high]);
+    const lowLoc = remapPoint(dataBounds, pixelBounds, [this.data.time.getTime(), this.data.low]);
+
+    drawLine(this.ctx, highLoc, lowLoc, "gray", 2);
+
+    if (this.data.open > this.data.close) {
+      drawLine(this.ctx, openLoc, closeLoc, "red", 2 * options.width);
+    } else {
+      drawLine(this.ctx, openLoc, closeLoc, "green", 2 * options.width);
+    }
+
+    drawPoint(this.ctx, openLoc, "black", options.radius);
+    drawPoint(this.ctx, closeLoc, "black", options.radius);
+    drawPoint(this.ctx, highLoc, "black", options.radius);
+    drawPoint(this.ctx, lowLoc, "black", options.radius);
+  }
 }
