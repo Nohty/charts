@@ -11,7 +11,8 @@
     "build": "tsc",
     "build:watch": "tsc -w",
     "build:example": "npm -prefix ./example run build",
-    "build:example:watch": "npm -prefix ./example run build:watch"
+    "build:example:watch": "npm -prefix ./example run build:watch",
+    "build:all": "npm run build && npm run build:example"
   },
   "devDependencies": {
     "typescript": "^5.2.2"
