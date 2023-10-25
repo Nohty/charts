@@ -54,8 +54,8 @@ export function remap(oldA: number, oldB: number, newA: number, newB: number, v:
  */
 export function remapPoint(oldBounds: Bounds, newBounds: Bounds, point: Point): Point {
   return [
-    remap(oldBounds[0][0], oldBounds[1][0], newBounds[0][0], newBounds[1][0], point[0]),
-    remap(oldBounds[0][1], oldBounds[1][1], newBounds[0][1], newBounds[1][1], point[1]),
+    remap(oldBounds.left, oldBounds.right, newBounds.left, newBounds.right, point[0]),
+    remap(oldBounds.top, oldBounds.bottom, newBounds.top, newBounds.bottom, point[1]),
   ];
 }
 

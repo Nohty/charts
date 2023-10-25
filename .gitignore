@@ -13,5 +13,8 @@ node_modules/
 # build output
 dist/
 
-# test html page
-*.html
+#pnpm lockfile
+pnpm-lock.yaml
+
+# example build output
+example/main.js

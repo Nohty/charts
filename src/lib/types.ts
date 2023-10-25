@@ -7,10 +7,21 @@ export type DeepPartial<T> = {
 };
 
 export type Point = [number, number];
-export type Bounds = [Point, Point];
 
-export type InputData = [string, number, number, number, number];
-export type Data = [Date, number, number, number, number];
+export type Bounds = {
+  left: number;
+  right: number;
+  top: number;
+  bottom: number;
+};
+
+export type DataPoint = {
+  time: Date;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+};
 
 export type GraphicsTextOptions = {
   color: string;
@@ -35,4 +46,9 @@ export type ChartOptionsLayout = {
   lineColor: string;
   connectPoints: boolean;
   opacity: number;
+};
+
+export type CandleStickOptions = {
+  width: number;
+  radius: number;
 };
