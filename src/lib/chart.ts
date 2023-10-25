@@ -59,7 +59,6 @@ export class Chart {
   }
 
   public setData(data: DataPoint[]): void {
-    console.log(data);
     this.data = this.cleansingData(data).map((d) => new CandleStick(this.ctx, d));
     this.draw();
   }
