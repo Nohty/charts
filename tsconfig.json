@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "ES6",
+    "target": "ES2022",
     "module": "CommonJS",
     "outDir": "./dist",
     "strict": true,
@@ -10,7 +10,6 @@
     "resolveJsonModule": true,
     "sourceMap": true,
     "declaration": true,
-    "declarationDir": "./dist/types",
     "noEmitOnError": true
   },
   "include": ["src"],
