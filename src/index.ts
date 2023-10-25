@@ -1,1 +1,1 @@
-export { ChartCandleStick } from "./lib/chart";
+export { Chart } from "./lib/chart";
