@@ -47,3 +47,8 @@ export type ChartOptionsLayout = {
   connectPoints: boolean;
   opacity: number;
 };
+
+export type CandleStickOptions = {
+  width: number;
+  radius: number;
+};
