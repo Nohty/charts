@@ -78,7 +78,35 @@ export class Chart {
     this.drawAxes();
   }
 
-  public drawAxes(): void {}
+  public drawAxes(): void {
+
+    // x = time
+    // y = price
+
+    const {bottom, left, right, top} = this.getPixelBounds();
+
+    // y as 
+    this.ctx.beginPath();
+    this.ctx.moveTo(0,0);
+    this.ctx.lineWidth = 1;
+    this.ctx.lineTo(left, right);
+    this.ctx.strokeStyle = "black";
+    this.ctx.stroke();
+
+    this.ctx.font = "1rem Arial";
+    this.ctx.fillText("Price", 10, 10);
+
+
+    // x as 
+    this.ctx.beginPath();
+    this.ctx.moveTo(0, 100);
+    this.ctx.lineWidth = 1;
+    this.ctx.lineTo(bottom, right);
+    this.ctx.stroke();
+
+    this.ctx.font = "1rem Arail";
+    this.ctx.fillText("Date", 100, 500);
+  }
 }
 
 class CandleStick {
