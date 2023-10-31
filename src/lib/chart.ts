@@ -84,28 +84,33 @@ export class Chart {
     // y = price
 
     const {bottom, left, right, top} = this.getPixelBounds();
+    const yMid = (bottom + top) / 2;
+    const xMid = (left + right) / 2;
+
+    console.log(yMid + " " + xMid);
+    
 
     // y as 
     this.ctx.beginPath();
-    this.ctx.moveTo(0,0);
+    this.ctx.moveTo(0, 0);
     this.ctx.lineWidth = 1;
-    this.ctx.lineTo(left, right);
+    this.ctx.lineTo(0, bottom + 15);
     this.ctx.strokeStyle = "black";
     this.ctx.stroke();
 
     this.ctx.font = "1rem Arial";
-    this.ctx.fillText("Price", 10, 10);
+    this.ctx.fillText("Price", 0, yMid);
 
 
     // x as 
     this.ctx.beginPath();
-    this.ctx.moveTo(0, 100);
+    this.ctx.moveTo(0, bottom + 15);
     this.ctx.lineWidth = 1;
-    this.ctx.lineTo(bottom, right);
+    this.ctx.lineTo(right, bottom + 15);
     this.ctx.stroke();
 
     this.ctx.font = "1rem Arail";
-    this.ctx.fillText("Date", 100, 500);
+    this.ctx.fillText("Date", xMid, bottom + 10);
   }
 }
 
