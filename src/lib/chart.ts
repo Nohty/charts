@@ -79,38 +79,32 @@ export class Chart {
   }
 
   public drawAxes(): void {
-
-    // x = time
-    // y = price
-
     const {bottom, left, right, top} = this.getPixelBounds();
     const yMid = (bottom + top) / 2;
     const xMid = (left + right) / 2;
-
-    console.log(yMid + " " + xMid);
     
-
     // y as 
-    this.ctx.beginPath();
-    this.ctx.moveTo(0, 0);
-    this.ctx.lineWidth = 1;
-    this.ctx.lineTo(0, bottom + 15);
-    this.ctx.strokeStyle = "black";
-    this.ctx.stroke();
-
-    this.ctx.font = "1rem Arial";
-    this.ctx.fillText("Price", 0, yMid);
-
+    this.drawAs(0, 0, bottom, "Price", yMid, 0);
 
     // x as 
+    this.drawAs(bottom + 15, right, bottom, "Date", xMid, bottom + 10, true);
+
+  }
+
+  public drawAs(xMoveTo: number, xLineTo: number, yLineTo: number, label: string, midPoint: number, param4: number, xAs: boolean = false): void {
     this.ctx.beginPath();
-    this.ctx.moveTo(0, bottom + 15);
+    this.ctx.moveTo(0, xMoveTo);
     this.ctx.lineWidth = 1;
-    this.ctx.lineTo(right, bottom + 15);
+    this.ctx.lineTo(xLineTo, yLineTo + 15);
+    this.ctx.strokeStyle = 'Black';
     this.ctx.stroke();
 
     this.ctx.font = "1rem Arail";
-    this.ctx.fillText("Date", xMid, bottom + 10);
+    if (xAs) {
+      this.ctx.fillText(label, midPoint, param4);
+    } else {
+      this.ctx.fillText(label, param4 , midPoint);
+    }
   }
 }
 
