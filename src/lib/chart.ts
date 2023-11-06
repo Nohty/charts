@@ -9,12 +9,12 @@ export class Chart {
 
   private data: CandleStick[] = [];
 
-  private margin = 20;
+  private margin = 100;
 
   constructor(private container: HTMLElement, options?: DeepPartial<ChartOptions>) {
     this.options = {
-      width: 1000,
-      height: 600,
+      width: 1100,
+      height: 1000,
       labels: ["time", "value"],
       layout: {
         textColor: "#333",
@@ -78,7 +78,69 @@ export class Chart {
     this.drawAxes();
   }
 
-  public drawAxes(): void {}
+  public drawAxes(): void {
+    const {bottom, left, right, top} = this.getPixelBounds();
+    const yMid = (bottom + top) / 2;
+    const xMid = (left + right) / 2;
+    
+    // y as 
+    this.drawAs(0, 0, bottom, "Price", yMid, 5);
+    this.drawYAsData(top, bottom);
+
+    // x as 
+    this.drawAs(bottom + 15, right + 100, bottom, "Date", xMid, bottom + 10, true);
+    this.drawXAsData(left, right, bottom);
+
+  }
+
+  public drawAs(xMoveTo: number, xLineTo: number, yLineTo: number, label: string, midPoint: number, fillTextCor: number, xAs: boolean = false): void {
+    this.ctx.beginPath();
+    this.ctx.moveTo(0, xMoveTo);
+    this.ctx.lineWidth = 1;
+    this.ctx.lineTo(xLineTo, yLineTo + 15);
+    this.ctx.strokeStyle = 'Black';
+    this.ctx.stroke();
+
+    this.ctx.font = "1rem Arail";
+    if (xAs) {
+      this.ctx.fillText(label, midPoint, fillTextCor);
+    } else {
+      this.ctx.fillText(label, fillTextCor, midPoint);
+    }
+  }
+
+  public drawYAsData(top: number, bottom: number): void {
+    let high = 0;
+    let low = 100; // must be a high number because it needs to be higher then the lowest number in the data
+    this.data.forEach(el => {
+      if (el.getDataPoint().high > high) {
+        high = el.getDataPoint().high;
+      } else if (el.getDataPoint().low < low) {
+        low = el.getDataPoint().low;
+      } 
+    });
+
+    this.ctx.font = '1rem Arail';
+    this.ctx.fillText(high.toString(), 5, top);
+    this.ctx.fillText(low.toString(), 5, bottom);
+    
+  }
+
+  public drawXAsData(left: number, right: number, bottom: number): void {
+    const firstDate = this.data[0]?.getDataPoint().time.toString().split(' ');
+    const lastDate = this.data[this.data.length - 1]?.getDataPoint().time.toString().split(' ');
+
+    if (!lastDate && !firstDate) return; //see if lastDate and firstDate is defined
+
+    // correctly dipslay date
+    let startDate = firstDate[0] + " " + firstDate[1] + " " + firstDate[2];
+    let endDate = lastDate[0] + " " + lastDate[1] + " " + lastDate[2];
+
+    this.ctx.font = '1rem Arail';
+    this.ctx.fillText(startDate, left, bottom);
+    this.ctx.fillText(endDate, right, bottom);
+  }
+
 }
 
 class CandleStick {
