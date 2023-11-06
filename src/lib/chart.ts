@@ -9,7 +9,7 @@ export class Chart {
 
   private data: CandleStick[] = [];
 
-  private margin = 20;
+  private margin = 100;
 
   constructor(private container: HTMLElement, options?: DeepPartial<ChartOptions>) {
     this.options = {
@@ -84,11 +84,11 @@ export class Chart {
     const xMid = (left + right) / 2;
     
     // y as 
-    this.drawAs(0, 0, bottom, "Price", yMid, 0);
+    this.drawAs(0, 0, bottom, "Price", yMid, 5);
     this.drawYAsData(top, bottom);
 
     // x as 
-    this.drawAs(bottom + 15, right, bottom, "Date", xMid, bottom + 10, true);
+    this.drawAs(bottom + 15, right + 100, bottom, "Date", xMid, bottom + 10, true);
     this.drawXAsData(left, right, bottom);
 
   }
@@ -121,30 +121,24 @@ export class Chart {
     });
 
     this.ctx.font = '1rem Arail';
-    this.ctx.fillText(high.toString(), 0, top);
-    this.ctx.fillText(low.toString(), 0, bottom);
+    this.ctx.fillText(high.toString(), 5, top);
+    this.ctx.fillText(low.toString(), 5, bottom);
     
   }
 
   public drawXAsData(left: number, right: number, bottom: number): void {
-    const dateQuery = this.data[this.data.length - 1]?.getDataPoint().time.toString().split(' ');
     const firstDate = this.data[0]?.getDataPoint().time.toString().split(' ');
+    const lastDate = this.data[this.data.length - 1]?.getDataPoint().time.toString().split(' ');
 
-    console.log(dateQuery);
-    console.log(firstDate);
-    console.log(left);
-    console.log(right);
-
-    if (!dateQuery && !firstDate) return; // add a check to see if dateQuery is defined
+    if (!lastDate && !firstDate) return; //see if lastDate and firstDate is defined
 
     // correctly dipslay date
-    let startDate = dateQuery[0] + " " + dateQuery[1] + " " + dateQuery[2];
-    let endDate = firstDate[0] + " " + firstDate[1] + " " + firstDate[2];
+    let startDate = firstDate[0] + " " + firstDate[1] + " " + firstDate[2];
+    let endDate = lastDate[0] + " " + lastDate[1] + " " + lastDate[2];
 
     this.ctx.font = '1rem Arail';
     this.ctx.fillText(startDate, left, bottom);
     this.ctx.fillText(endDate, right, bottom);
-    
   }
 
 }
