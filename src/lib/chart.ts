@@ -13,8 +13,8 @@ export class Chart {
 
   constructor(private container: HTMLElement, options?: DeepPartial<ChartOptions>) {
     this.options = {
-      width: 1000,
-      height: 600,
+      width: 1100,
+      height: 1000,
       labels: ["time", "value"],
       layout: {
         textColor: "#333",
@@ -85,13 +85,15 @@ export class Chart {
     
     // y as 
     this.drawAs(0, 0, bottom, "Price", yMid, 0);
+    this.drawYAsData(top, bottom);
 
     // x as 
     this.drawAs(bottom + 15, right, bottom, "Date", xMid, bottom + 10, true);
+    this.drawXAsData(left, right, bottom);
 
   }
 
-  public drawAs(xMoveTo: number, xLineTo: number, yLineTo: number, label: string, midPoint: number, param4: number, xAs: boolean = false): void {
+  public drawAs(xMoveTo: number, xLineTo: number, yLineTo: number, label: string, midPoint: number, fillTextCor: number, xAs: boolean = false): void {
     this.ctx.beginPath();
     this.ctx.moveTo(0, xMoveTo);
     this.ctx.lineWidth = 1;
@@ -101,11 +103,50 @@ export class Chart {
 
     this.ctx.font = "1rem Arail";
     if (xAs) {
-      this.ctx.fillText(label, midPoint, param4);
+      this.ctx.fillText(label, midPoint, fillTextCor);
     } else {
-      this.ctx.fillText(label, param4 , midPoint);
+      this.ctx.fillText(label, fillTextCor, midPoint);
     }
   }
+
+  public drawYAsData(top: number, bottom: number): void {
+    let high = 0;
+    let low = 100; // must be a high number because it needs to be higher then the lowest number in the data
+    this.data.forEach(el => {
+      if (el.getDataPoint().high > high) {
+        high = el.getDataPoint().high;
+      } else if (el.getDataPoint().low < low) {
+        low = el.getDataPoint().low;
+      } 
+    });
+
+    this.ctx.font = '1rem Arail';
+    this.ctx.fillText(high.toString(), 0, top);
+    this.ctx.fillText(low.toString(), 0, bottom);
+    
+  }
+
+  public drawXAsData(left: number, right: number, bottom: number): void {
+    const dateQuery = this.data[this.data.length - 1]?.getDataPoint().time.toString().split(' ');
+    const firstDate = this.data[0]?.getDataPoint().time.toString().split(' ');
+
+    console.log(dateQuery);
+    console.log(firstDate);
+    console.log(left);
+    console.log(right);
+
+    if (!dateQuery && !firstDate) return; // add a check to see if dateQuery is defined
+
+    // correctly dipslay date
+    let startDate = dateQuery[0] + " " + dateQuery[1] + " " + dateQuery[2];
+    let endDate = firstDate[0] + " " + firstDate[1] + " " + firstDate[2];
+
+    this.ctx.font = '1rem Arail';
+    this.ctx.fillText(startDate, left, bottom);
+    this.ctx.fillText(endDate, right, bottom);
+    
+  }
+
 }
 
 class CandleStick {
