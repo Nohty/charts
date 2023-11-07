@@ -35,7 +35,6 @@ export type GraphicsTextOptions = {
 export type ChartOptions = {
   width: number;
   height: number;
-  labels: [string, string];
   layout: ChartOptionsLayout;
 };
 
@@ -44,8 +43,6 @@ export type ChartOptionsLayout = {
   backgroundColor: string;
   pointColor: string;
   lineColor: string;
-  connectPoints: boolean;
-  opacity: number;
 };
 
 export type CandleStickOptions = {
