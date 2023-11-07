@@ -84,7 +84,7 @@ export class Chart {
     const xMid = (left + right) / 2;
     
     // y as 
-    this.drawAs(50, 50, 50, bottom + 50, "Price", 60, 0);
+    this.drawAs(50, 50, 50, bottom + 50, "Price $", 60, 0);
     this.drawYAsData(top, bottom, yMid);
 
     // x as 
