@@ -1,6 +1,6 @@
 import { drawLine, drawPoint } from "./graphics";
 import { remapPoint } from "./math";
-import { Bounds, CandleStickOptions, ChartOptions, DataPoint, DeepPartial } from "./types";
+import { Bounds, CandleStickOptions, ChartOptions, DataPoint, DeepPartial, Point } from "./types";
 
 export class Chart {
   private options: ChartOptions;
@@ -15,14 +15,11 @@ export class Chart {
     this.options = {
       width: 1500,
       height: 1000,
-      labels: ["time", "value"],
       layout: {
         textColor: "#333",
         backgroundColor: "#fff",
         pointColor: "#333",
         lineColor: "#333",
-        connectPoints: true,
-        opacity: 1,
       },
       ...(options as Partial<ChartOptions>),
     };
@@ -90,7 +87,6 @@ export class Chart {
     // x as 
     this.drawAs(0, bottom + 5, right + 100, bottom + 5, "Date", xMid, bottom + 60, true);
     this.drawXAsData(left, right, bottom, xMid);
-
   }
 
   public drawAs(xMoveTo: number, yMoveTo: number, xLineTo: number, yLineTo: number, label: string, midPoint: number, fillTextCor: number, xAs: boolean = false): void {
@@ -149,6 +145,13 @@ export class Chart {
     return result
   }
 
+  public getMousePos(evt: MouseEvent, dataSpace: boolean = false): Point {
+    const rect = this.canvas.getBoundingClientRect();
+    const point: Point = [evt.clientX - rect.left, evt.clientY - rect.top];
+
+    if (dataSpace) return remapPoint(this.getPixelBounds(), this.getDataBounds(), point);
+    else return point;
+  }
 }
 
 class CandleStick {
