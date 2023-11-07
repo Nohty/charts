@@ -48,4 +48,5 @@ export type ChartOptionsLayout = {
 export type CandleStickOptions = {
   width: number;
   radius: number;
+  pointColor: string;
 };
