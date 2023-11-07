@@ -13,7 +13,7 @@ export class Chart {
 
   constructor(private container: HTMLElement, options?: DeepPartial<ChartOptions>) {
     this.options = {
-      width: 1100,
+      width: 1500,
       height: 1000,
       labels: ["time", "value"],
       layout: {
@@ -84,20 +84,20 @@ export class Chart {
     const xMid = (left + right) / 2;
     
     // y as 
-    this.drawAs(0, 0, bottom, "Price", yMid, 5);
-    this.drawYAsData(top, bottom);
+    this.drawAs(50, 50, 50, bottom + 50, "Price", yMid, 0);
+    this.drawYAsData(top, bottom, yMid);
 
     // x as 
-    this.drawAs(bottom + 15, right + 100, bottom, "Date", xMid, bottom + 10, true);
-    this.drawXAsData(left, right, bottom);
+    this.drawAs(0, bottom + 5, right + 100, bottom + 5, "Date", xMid, bottom + 60, true);
+    this.drawXAsData(left, right, bottom, xMid);
 
   }
 
-  public drawAs(xMoveTo: number, xLineTo: number, yLineTo: number, label: string, midPoint: number, fillTextCor: number, xAs: boolean = false): void {
+  public drawAs(xMoveTo: number, yMoveTo: number, xLineTo: number, yLineTo: number, label: string, midPoint: number, fillTextCor: number, xAs: boolean = false): void {
     this.ctx.beginPath();
-    this.ctx.moveTo(0, xMoveTo);
+    this.ctx.moveTo(xMoveTo, yMoveTo);
     this.ctx.lineWidth = 1;
-    this.ctx.lineTo(xLineTo, yLineTo + 15);
+    this.ctx.lineTo(xLineTo, yLineTo);
     this.ctx.strokeStyle = 'Black';
     this.ctx.stroke();
 
@@ -105,11 +105,11 @@ export class Chart {
     if (xAs) {
       this.ctx.fillText(label, midPoint, fillTextCor);
     } else {
-      this.ctx.fillText(label, fillTextCor, midPoint);
+      this.ctx.fillText(label, fillTextCor, 30);
     }
   }
 
-  public drawYAsData(top: number, bottom: number): void {
+  public drawYAsData(top: number, bottom: number, midPoint: number): void {
     let high = 0;
     let low = 100; // must be a high number because it needs to be higher then the lowest number in the data
     this.data.forEach(el => {
@@ -120,25 +120,34 @@ export class Chart {
       } 
     });
 
+    const mid = (high + low) / 2;
+
+
     this.ctx.font = '1rem Arail';
     this.ctx.fillText(high.toString(), 5, top);
     this.ctx.fillText(low.toString(), 5, bottom);
+    this.ctx.fillText(mid.toString(), 5, midPoint)
     
   }
 
-  public drawXAsData(left: number, right: number, bottom: number): void {
+  public drawXAsData(left: number, right: number, bottom: number, xMid: number): void {
+    const midPointData = this.data.length / 2
+
     const firstDate = this.data[0]?.getDataPoint().time.toString().split(' ');
     const lastDate = this.data[this.data.length - 1]?.getDataPoint().time.toString().split(' ');
+    const midDate = this.data[midPointData].getDataPoint().time.toString().split(' ');
 
-    if (!lastDate && !firstDate) return; //see if lastDate and firstDate is defined
+    if (!lastDate && !firstDate && !midDate) return; //see if lastDate, firstDate and midDate is defined
 
     // correctly dipslay date
     let startDate = firstDate[0] + " " + firstDate[1] + " " + firstDate[2];
+    let middelDate = midDate[0] + " " + midDate[1] + " " + midDate[2]
     let endDate = lastDate[0] + " " + lastDate[1] + " " + lastDate[2];
 
     this.ctx.font = '1rem Arail';
-    this.ctx.fillText(startDate, left, bottom);
-    this.ctx.fillText(endDate, right, bottom);
+    this.ctx.fillText(startDate, left, bottom + 30);
+    this.ctx.fillText(middelDate, xMid, bottom + 30)
+    this.ctx.fillText(endDate, right, bottom + 30);
   }
 
 }
