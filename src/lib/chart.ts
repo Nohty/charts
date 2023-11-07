@@ -84,7 +84,7 @@ export class Chart {
     const xMid = (left + right) / 2;
     
     // y as 
-    this.drawAs(50, 50, 50, bottom + 50, "Price", yMid, 0);
+    this.drawAs(50, 50, 50, bottom + 50, "Price", 60, 0);
     this.drawYAsData(top, bottom, yMid);
 
     // x as 
@@ -105,13 +105,14 @@ export class Chart {
     if (xAs) {
       this.ctx.fillText(label, midPoint, fillTextCor);
     } else {
-      this.ctx.fillText(label, fillTextCor, 30);
+      this.ctx.fillText(label, fillTextCor, midPoint);
     }
   }
 
   public drawYAsData(top: number, bottom: number, midPoint: number): void {
     let high = 0;
     let low = 100; // must be a high number because it needs to be higher then the lowest number in the data
+
     this.data.forEach(el => {
       if (el.getDataPoint().high > high) {
         high = el.getDataPoint().high;
@@ -122,32 +123,30 @@ export class Chart {
 
     const mid = (high + low) / 2;
 
-
     this.ctx.font = '1rem Arail';
     this.ctx.fillText(high.toString(), 5, top);
     this.ctx.fillText(low.toString(), 5, bottom);
-    this.ctx.fillText(mid.toString(), 5, midPoint)
-    
+    this.ctx.fillText(mid.toString(), 5, midPoint);
   }
 
   public drawXAsData(left: number, right: number, bottom: number, xMid: number): void {
     const midPointData = this.data.length / 2
 
-    const firstDate = this.data[0]?.getDataPoint().time.toString().split(' ');
-    const lastDate = this.data[this.data.length - 1]?.getDataPoint().time.toString().split(' ');
-    const midDate = this.data[midPointData].getDataPoint().time.toString().split(' ');
-
-    if (!lastDate && !firstDate && !midDate) return; //see if lastDate, firstDate and midDate is defined
-
-    // correctly dipslay date
-    let startDate = firstDate[0] + " " + firstDate[1] + " " + firstDate[2];
-    let middelDate = midDate[0] + " " + midDate[1] + " " + midDate[2]
-    let endDate = lastDate[0] + " " + lastDate[1] + " " + lastDate[2];
+    let startDate = this.getDateToDisplay(0);
+    let middelDate = this.getDateToDisplay(this.data.length - 1);
+    let endDate = this.getDateToDisplay(midPointData);
 
     this.ctx.font = '1rem Arail';
     this.ctx.fillText(startDate, left, bottom + 30);
     this.ctx.fillText(middelDate, xMid, bottom + 30)
     this.ctx.fillText(endDate, right, bottom + 30);
+  }
+
+  public getDateToDisplay(index: number): string {
+    const dateSplit = this.data[index].getDataPoint().time.toString().split(' '); 
+    const result = dateSplit[0] + " " + dateSplit[1] + " " + dateSplit[2];
+
+    return result
   }
 
 }
