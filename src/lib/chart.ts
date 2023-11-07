@@ -133,8 +133,8 @@ export class Chart {
     const midPointData = this.data.length / 2
 
     let startDate = this.getDateToDisplay(0);
-    let middelDate = this.getDateToDisplay(this.data.length - 1);
-    let endDate = this.getDateToDisplay(midPointData);
+    let middelDate = this.getDateToDisplay(midPointData);
+    let endDate = this.getDateToDisplay(this.data.length - 1);
 
     this.ctx.font = '1rem Arail';
     this.ctx.fillText(startDate, left, bottom + 30);
