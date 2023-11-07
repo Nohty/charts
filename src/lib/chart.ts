@@ -13,8 +13,8 @@ export class Chart {
 
   constructor(private container: HTMLElement, options?: DeepPartial<ChartOptions>) {
     this.options = {
-      width: 1500,
-      height: 1000,
+      width: 1200,
+      height: 900,
       layout: {
         textColor: "#333",
         backgroundColor: "#fff",
@@ -69,7 +69,7 @@ export class Chart {
 
   public draw(): void {
     for (const candleStick of this.data) {
-      candleStick.draw(this.getDataBounds(), this.getPixelBounds(), { radius: 2, width: 10 });
+      candleStick.draw(this.getDataBounds(), this.getPixelBounds(), { radius: 2, width: 10, pointColor: "333" });
     }
 
     this.drawAxes();
@@ -81,20 +81,20 @@ export class Chart {
     const xMid = (left + right) / 2;
     
     // y as 
-    this.drawAs(50, 50, 50, bottom + 50, "Price $", 60, 0);
-    this.drawYAsData(top, bottom, yMid);
+    this.drawAs([left - 50, left - 50], [left - 50, bottom + 50], "Price $", top - 40, left - 100);
+    this.drawYAsData(top, bottom, left, yMid);
 
     // x as 
-    this.drawAs(0, bottom + 5, right + 100, bottom + 5, "Date", xMid, bottom + 60, true);
+    this.drawAs([left - 100, bottom + 5], [right + 100, bottom + 5], "Date", xMid, bottom + 60, true);
     this.drawXAsData(left, right, bottom, xMid);
   }
 
-  public drawAs(xMoveTo: number, yMoveTo: number, xLineTo: number, yLineTo: number, label: string, midPoint: number, fillTextCor: number, xAs: boolean = false): void {
+  public drawAs(moveTo: Point, lineTo: Point, label: string, midPoint: number, fillTextCor: number, xAs: boolean = false): void {
     this.ctx.beginPath();
-    this.ctx.moveTo(xMoveTo, yMoveTo);
+    this.ctx.moveTo(moveTo[0], moveTo[1]);
     this.ctx.lineWidth = 1;
-    this.ctx.lineTo(xLineTo, yLineTo);
-    this.ctx.strokeStyle = 'Black';
+    this.ctx.lineTo(lineTo[0], lineTo[1]);
+    this.ctx.strokeStyle = this.options.layout.textColor;
     this.ctx.stroke();
 
     this.ctx.font = "1rem Arail";
@@ -105,7 +105,7 @@ export class Chart {
     }
   }
 
-  public drawYAsData(top: number, bottom: number, midPoint: number): void {
+  public drawYAsData(top: number, bottom: number, left: number, midPoint: number): void {
     let high = 0;
     let low = 100; // must be a high number because it needs to be higher then the lowest number in the data
 
@@ -120,9 +120,9 @@ export class Chart {
     const mid = (high + low) / 2;
 
     this.ctx.font = '1rem Arail';
-    this.ctx.fillText(high.toString(), 5, top);
-    this.ctx.fillText(low.toString(), 5, bottom);
-    this.ctx.fillText(mid.toString(), 5, midPoint);
+    this.ctx.fillText(high.toString(), left - 100, top);
+    this.ctx.fillText(low.toString(), left - 100, bottom);
+    this.ctx.fillText(mid.toString(), left - 100, midPoint);
   }
 
   public drawXAsData(left: number, right: number, bottom: number, xMid: number): void {
@@ -175,9 +175,9 @@ class CandleStick {
       drawLine(this.ctx, openLoc, closeLoc, "green", 2 * options.width);
     }
 
-    drawPoint(this.ctx, openLoc, "black", options.radius);
-    drawPoint(this.ctx, closeLoc, "black", options.radius);
-    drawPoint(this.ctx, highLoc, "black", options.radius);
-    drawPoint(this.ctx, lowLoc, "black", options.radius);
+    drawPoint(this.ctx, openLoc, options.pointColor, options.radius);
+    drawPoint(this.ctx, closeLoc, options.pointColor, options.radius);
+    drawPoint(this.ctx, highLoc, options.pointColor, options.radius);
+    drawPoint(this.ctx, lowLoc, options.pointColor, options.radius);
   }
 }
