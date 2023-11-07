@@ -16,5 +16,8 @@ dist/
 #pnpm lockfile
 pnpm-lock.yaml
 
+#npm lockfile
+package-lock.json
+
 # example build output
 example/main.js
