@@ -70,7 +70,7 @@ export class Chart {
     this.draw();
   }
 
-  public draw(): void {
+  private draw(): void {
     for (const candleStick of this.data) {
       candleStick.draw(this.getDataBounds(), this.getPixelBounds(), { radius: 2, width: 10, pointColor: "333" });
     }
@@ -78,7 +78,7 @@ export class Chart {
     this.drawAxes();
   }
 
-  public drawAxes(): void {
+  private drawAxes(): void {
     const { bottom, left, right, top } = this.getPixelBounds();
     const yMid = (bottom + top) / 2;
     const xMid = (left + right) / 2;
@@ -92,7 +92,7 @@ export class Chart {
     this.drawXAsData(left, right, bottom, xMid);
   }
 
-  public drawAs(
+  private drawAs(
     moveTo: Point,
     lineTo: Point,
     label: string,
@@ -115,7 +115,7 @@ export class Chart {
     }
   }
 
-  public drawYAsData(top: number, bottom: number, left: number, midPoint: number): void {
+  private drawYAsData(top: number, bottom: number, left: number, midPoint: number): void {
     let high = 0;
     let low = 100; // must be a high number because it needs to be higher then the lowest number in the data
 
@@ -135,7 +135,7 @@ export class Chart {
     this.ctx.fillText(mid.toString(), left - 100, midPoint);
   }
 
-  public drawXAsData(left: number, right: number, bottom: number, xMid: number): void {
+  private drawXAsData(left: number, right: number, bottom: number, xMid: number): void {
     const midPointData = this.data.length / 2;
 
     let startDate = this.getDateToDisplay(0);
@@ -148,7 +148,7 @@ export class Chart {
     this.ctx.fillText(endDate, right, bottom + 30);
   }
 
-  public getDateToDisplay(index: number): string {
+  private getDateToDisplay(index: number): string {
     const dateSplit = this.data[index].getDataPoint().time.toString().split(" ");
     const result = dateSplit[0] + " " + dateSplit[1] + " " + dateSplit[2];
 
