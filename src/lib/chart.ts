@@ -1,5 +1,5 @@
 import { drawLine, drawPoint } from "./graphics";
-import { remapPoint } from "./math";
+import { distance, getNearest, remapPoint } from "./math";
 import { Bounds, CandleStickOptions, ChartOptions, DataPoint, DeepPartial, Point } from "./types";
 import { Paint } from "./paint";
 
@@ -17,6 +17,7 @@ export class Chart {
     this.options = {
       width: 1200,
       height: 900,
+      tooltipEnabled: true,
       layout: {
         textColor: "#333",
         backgroundColor: "#fff",
@@ -33,6 +34,7 @@ export class Chart {
     this.container.appendChild(this.canvas);
     this.ctx = this.canvas.getContext("2d")!;
     this.paint = new Paint(this.ctx);
+    this.addEventListeners();
   }
 
   private getDataBounds(): Bounds {
@@ -60,17 +62,7 @@ export class Chart {
     });
   }
 
-  public setData(data: DataPoint[]): void {
-    this.data = this.cleansingData(data).map((d) => new CandleStick(this.ctx, d));
-    this.draw();
-  }
-
-  public addData(data: DataPoint[]): void {
-    this.data.push(...this.cleansingData(data).map((d) => new CandleStick(this.ctx, d)));
-    this.draw();
-  }
-
-  public draw(): void {
+  private draw(): void {
     for (const candleStick of this.data) {
       candleStick.draw(this.getDataBounds(), this.getPixelBounds(), { radius: 2, width: 10, pointColor: "333" });
     }
@@ -78,21 +70,28 @@ export class Chart {
     this.drawAxes();
   }
 
-  public drawAxes(): void {
-    const {bottom, left, right, top} = this.getPixelBounds();
+  private drawAxes(): void {
+    const { bottom, left, right, top } = this.getPixelBounds();
     const yMid = (bottom + top) / 2;
     const xMid = (left + right) / 2;
-    
-    // y as 
+
+    // y as
     this.drawAs([left - 50, left - 50], [left - 50, bottom + 50], "Price $", top - 40, left - 100);
     this.drawYAsData(top, bottom, left, yMid);
 
-    // x as 
+    // x as
     this.drawAs([left - 100, bottom + 5], [right + 100, bottom + 5], "Date", xMid, bottom + 60, true);
     this.drawXAsData(left, right, bottom, xMid);
   }
 
-  public drawAs(moveTo: Point, lineTo: Point, label: string, midPoint: number, fillTextCor: number, xAs: boolean = false): void {
+  private drawAs(
+    moveTo: Point,
+    lineTo: Point,
+    label: string,
+    midPoint: number,
+    fillTextCor: number,
+    xAs: boolean = false
+  ): void {
     this.ctx.beginPath();
     this.ctx.moveTo(moveTo[0], moveTo[1]);
     this.ctx.lineWidth = 1;
@@ -108,44 +107,112 @@ export class Chart {
     }
   }
 
-  public drawYAsData(top: number, bottom: number, left: number, midPoint: number): void {
+  private drawYAsData(top: number, bottom: number, left: number, midPoint: number): void {
     let high = 0;
     let low = 100; // must be a high number because it needs to be higher then the lowest number in the data
 
-    this.data.forEach(el => {
+    this.data.forEach((el) => {
       if (el.getDataPoint().high > high) {
         high = el.getDataPoint().high;
       } else if (el.getDataPoint().low < low) {
         low = el.getDataPoint().low;
-      } 
+      }
     });
 
     const mid = (high + low) / 2;
 
-    this.ctx.font = '1rem Arail';
+    this.ctx.font = "1rem Arail";
     this.ctx.fillText(high.toString(), left - 100, top);
     this.ctx.fillText(low.toString(), left - 100, bottom);
     this.ctx.fillText(mid.toString(), left - 100, midPoint);
   }
 
-  public drawXAsData(left: number, right: number, bottom: number, xMid: number): void {
-    const midPointData = this.data.length / 2
+  private drawXAsData(left: number, right: number, bottom: number, xMid: number): void {
+    const midPointData = this.data.length / 2;
 
     let startDate = this.getDateToDisplay(0);
     let middelDate = this.getDateToDisplay(midPointData);
     let endDate = this.getDateToDisplay(this.data.length - 1);
 
-    this.ctx.font = '1rem Arail';
+    this.ctx.font = "1rem Arail";
     this.ctx.fillText(startDate, left, bottom + 30);
-    this.ctx.fillText(middelDate, xMid, bottom + 30)
+    this.ctx.fillText(middelDate, xMid, bottom + 30);
     this.ctx.fillText(endDate, right, bottom + 30);
   }
 
-  public getDateToDisplay(index: number): string {
-    const dateSplit = this.data[index].getDataPoint().time.toString().split(' '); 
+  private getDateToDisplay(index: number): string {
+    const dateSplit = this.data[index].getDataPoint().time.toString().split(" ");
     const result = dateSplit[0] + " " + dateSplit[1] + " " + dateSplit[2];
 
-    return result
+    return result;
+  }
+
+  private addEventListeners(): void {
+    this.canvas.addEventListener("mousemove", (e: MouseEvent) => {
+      e.preventDefault();
+
+      if (this.options.tooltipEnabled) {
+        const mousePos = this.getMousePos(e);
+
+        const points = this.data.flatMap((d) => [
+          remapPoint(this.getDataBounds(), this.getPixelBounds(), [
+            d.getDataPoint().time.getTime(),
+            d.getDataPoint().open,
+          ]),
+          remapPoint(this.getDataBounds(), this.getPixelBounds(), [
+            d.getDataPoint().time.getTime(),
+            d.getDataPoint().high,
+          ]),
+          remapPoint(this.getDataBounds(), this.getPixelBounds(), [
+            d.getDataPoint().time.getTime(),
+            d.getDataPoint().low,
+          ]),
+          remapPoint(this.getDataBounds(), this.getPixelBounds(), [
+            d.getDataPoint().time.getTime(),
+            d.getDataPoint().close,
+          ]),
+        ]);
+
+        const index = getNearest(mousePos, points);
+        const nearest = this.data[Math.floor(index / 4)].getDataPoint();
+        const distanceToNearest = distance(points[index], mousePos);
+
+        if (distanceToNearest < this.margin / 5) {
+          this.displayTooltip(nearest, mousePos);
+        } else {
+          this.displayTooltip(null);
+        }
+      }
+    });
+  }
+
+  private displayTooltip(dataPoint: DataPoint | null, mousePos?: Point): void {
+    const tooltip = this.container.querySelector("span");
+    if (tooltip) this.container.removeChild(tooltip);
+
+    if (dataPoint) {
+      const computedStyle = window.getComputedStyle(this.container);
+
+      const canvasMarginLeft = parseFloat(computedStyle.marginLeft);
+      const canvasMarginTop = parseFloat(computedStyle.marginTop);
+
+      const span = document.createElement("span");
+      span.style.position = "absolute";
+      span.style.left = `${mousePos![0] + canvasMarginLeft + 20}px`;
+      span.style.top = `${mousePos![1] + canvasMarginTop}px`;
+      span.style.backgroundColor = "black";
+      span.style.color = "white";
+      span.style.padding = "5px";
+      span.style.borderRadius = "5px";
+      span.style.pointerEvents = "none";
+      span.style.zIndex = "1";
+
+      const date = new Date(dataPoint.time).toDateString();
+
+      span.innerText = `Date: ${date} \nOpen: ${dataPoint.open} \nHigh: ${dataPoint.high} \nLow: ${dataPoint.low} \nClose: ${dataPoint.close}`;
+
+      this.container.appendChild(span);
+    }
   }
 
   public getMousePos(evt: MouseEvent, dataSpace: boolean = false): Point {
@@ -154,6 +221,16 @@ export class Chart {
 
     if (dataSpace) return remapPoint(this.getPixelBounds(), this.getDataBounds(), point);
     else return point;
+  }
+
+  public setData(data: DataPoint[]): void {
+    this.data = this.cleansingData(data).map((d) => new CandleStick(this.ctx, d));
+    this.draw();
+  }
+
+  public addData(data: DataPoint[]): void {
+    this.data.push(...this.cleansingData(data).map((d) => new CandleStick(this.ctx, d)));
+    this.draw();
   }
 }
 
