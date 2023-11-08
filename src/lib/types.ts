@@ -36,6 +36,7 @@ export type ChartOptions = {
   width: number;
   height: number;
   layout: ChartOptionsLayout;
+  tooltipEnabled: boolean;
 };
 
 export type ChartOptionsLayout = {
