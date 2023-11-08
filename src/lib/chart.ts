@@ -1,5 +1,5 @@
 import { drawLine, drawPoint } from "./graphics";
-import { remapPoint } from "./math";
+import { distance, getNearest, remapPoint } from "./math";
 import { Bounds, CandleStickOptions, ChartOptions, DataPoint, DeepPartial, Point } from "./types";
 import { Paint } from "./paint";
 
@@ -17,6 +17,7 @@ export class Chart {
     this.options = {
       width: 1200,
       height: 900,
+      tooltipEnabled: true,
       layout: {
         textColor: "#333",
         backgroundColor: "#fff",
@@ -33,6 +34,7 @@ export class Chart {
     this.container.appendChild(this.canvas);
     this.ctx = this.canvas.getContext("2d")!;
     this.paint = new Paint(this.ctx);
+    this.addEventListeners();
   }
 
   private getDataBounds(): Bounds {
@@ -58,16 +60,6 @@ export class Chart {
       if (d.time instanceof Date) return d;
       else return { ...d, time: new Date(d.time) };
     });
-  }
-
-  public setData(data: DataPoint[]): void {
-    this.data = this.cleansingData(data).map((d) => new CandleStick(this.ctx, d));
-    this.draw();
-  }
-
-  public addData(data: DataPoint[]): void {
-    this.data.push(...this.cleansingData(data).map((d) => new CandleStick(this.ctx, d)));
-    this.draw();
   }
 
   private draw(): void {
@@ -155,12 +147,90 @@ export class Chart {
     return result;
   }
 
+  private addEventListeners(): void {
+    this.canvas.addEventListener("mousemove", (e: MouseEvent) => {
+      e.preventDefault();
+
+      if (this.options.tooltipEnabled) {
+        const mousePos = this.getMousePos(e);
+
+        const points = this.data.flatMap((d) => [
+          remapPoint(this.getDataBounds(), this.getPixelBounds(), [
+            d.getDataPoint().time.getTime(),
+            d.getDataPoint().open,
+          ]),
+          remapPoint(this.getDataBounds(), this.getPixelBounds(), [
+            d.getDataPoint().time.getTime(),
+            d.getDataPoint().high,
+          ]),
+          remapPoint(this.getDataBounds(), this.getPixelBounds(), [
+            d.getDataPoint().time.getTime(),
+            d.getDataPoint().low,
+          ]),
+          remapPoint(this.getDataBounds(), this.getPixelBounds(), [
+            d.getDataPoint().time.getTime(),
+            d.getDataPoint().close,
+          ]),
+        ]);
+
+        const index = getNearest(mousePos, points);
+        const nearest = this.data[Math.floor(index / 4)].getDataPoint();
+        const distanceToNearest = distance(points[index], mousePos);
+
+        if (distanceToNearest < this.margin / 5) {
+          this.displayTooltip(nearest, mousePos);
+        } else {
+          this.displayTooltip(null);
+        }
+      }
+    });
+  }
+
+  private displayTooltip(dataPoint: DataPoint | null, mousePos?: Point): void {
+    const tooltip = this.container.querySelector("span");
+    if (tooltip) this.container.removeChild(tooltip);
+
+    if (dataPoint) {
+      const computedStyle = window.getComputedStyle(this.container);
+
+      const canvasMarginLeft = parseFloat(computedStyle.marginLeft);
+      const canvasMarginTop = parseFloat(computedStyle.marginTop);
+
+      const span = document.createElement("span");
+      span.style.position = "absolute";
+      span.style.left = `${mousePos![0] + canvasMarginLeft + 20}px`;
+      span.style.top = `${mousePos![1] + canvasMarginTop}px`;
+      span.style.backgroundColor = "black";
+      span.style.color = "white";
+      span.style.padding = "5px";
+      span.style.borderRadius = "5px";
+      span.style.pointerEvents = "none";
+      span.style.zIndex = "1";
+
+      const date = new Date(dataPoint.time).toDateString();
+
+      span.innerText = `Date: ${date} \nOpen: ${dataPoint.open} \nHigh: ${dataPoint.high} \nLow: ${dataPoint.low} \nClose: ${dataPoint.close}`;
+
+      this.container.appendChild(span);
+    }
+  }
+
   public getMousePos(evt: MouseEvent, dataSpace: boolean = false): Point {
     const rect = this.canvas.getBoundingClientRect();
     const point: Point = [evt.clientX - rect.left, evt.clientY - rect.top];
 
     if (dataSpace) return remapPoint(this.getPixelBounds(), this.getDataBounds(), point);
     else return point;
+  }
+
+  public setData(data: DataPoint[]): void {
+    this.data = this.cleansingData(data).map((d) => new CandleStick(this.ctx, d));
+    this.draw();
+  }
+
+  public addData(data: DataPoint[]): void {
+    this.data.push(...this.cleansingData(data).map((d) => new CandleStick(this.ctx, d)));
+    this.draw();
   }
 }
 
