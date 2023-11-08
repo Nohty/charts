@@ -79,20 +79,27 @@ export class Chart {
   }
 
   public drawAxes(): void {
-    const {bottom, left, right, top} = this.getPixelBounds();
+    const { bottom, left, right, top } = this.getPixelBounds();
     const yMid = (bottom + top) / 2;
     const xMid = (left + right) / 2;
-    
-    // y as 
+
+    // y as
     this.drawAs([left - 50, left - 50], [left - 50, bottom + 50], "Price $", top - 40, left - 100);
     this.drawYAsData(top, bottom, left, yMid);
 
-    // x as 
+    // x as
     this.drawAs([left - 100, bottom + 5], [right + 100, bottom + 5], "Date", xMid, bottom + 60, true);
     this.drawXAsData(left, right, bottom, xMid);
   }
 
-  public drawAs(moveTo: Point, lineTo: Point, label: string, midPoint: number, fillTextCor: number, xAs: boolean = false): void {
+  public drawAs(
+    moveTo: Point,
+    lineTo: Point,
+    label: string,
+    midPoint: number,
+    fillTextCor: number,
+    xAs: boolean = false
+  ): void {
     this.ctx.beginPath();
     this.ctx.moveTo(moveTo[0], moveTo[1]);
     this.ctx.lineWidth = 1;
@@ -112,40 +119,40 @@ export class Chart {
     let high = 0;
     let low = 100; // must be a high number because it needs to be higher then the lowest number in the data
 
-    this.data.forEach(el => {
+    this.data.forEach((el) => {
       if (el.getDataPoint().high > high) {
         high = el.getDataPoint().high;
       } else if (el.getDataPoint().low < low) {
         low = el.getDataPoint().low;
-      } 
+      }
     });
 
     const mid = (high + low) / 2;
 
-    this.ctx.font = '1rem Arail';
+    this.ctx.font = "1rem Arail";
     this.ctx.fillText(high.toString(), left - 100, top);
     this.ctx.fillText(low.toString(), left - 100, bottom);
     this.ctx.fillText(mid.toString(), left - 100, midPoint);
   }
 
   public drawXAsData(left: number, right: number, bottom: number, xMid: number): void {
-    const midPointData = this.data.length / 2
+    const midPointData = this.data.length / 2;
 
     let startDate = this.getDateToDisplay(0);
     let middelDate = this.getDateToDisplay(midPointData);
     let endDate = this.getDateToDisplay(this.data.length - 1);
 
-    this.ctx.font = '1rem Arail';
+    this.ctx.font = "1rem Arail";
     this.ctx.fillText(startDate, left, bottom + 30);
-    this.ctx.fillText(middelDate, xMid, bottom + 30)
+    this.ctx.fillText(middelDate, xMid, bottom + 30);
     this.ctx.fillText(endDate, right, bottom + 30);
   }
 
   public getDateToDisplay(index: number): string {
-    const dateSplit = this.data[index].getDataPoint().time.toString().split(' '); 
+    const dateSplit = this.data[index].getDataPoint().time.toString().split(" ");
     const result = dateSplit[0] + " " + dateSplit[1] + " " + dateSplit[2];
 
-    return result
+    return result;
   }
 
   public getMousePos(evt: MouseEvent, dataSpace: boolean = false): Point {
