@@ -15,3 +15,16 @@ chart.setData([
   { time: "2018-12-30", open: 106.33, high: 110.2, low: 90.39, close: 98.1 },
   { time: "2018-12-31", open: 109.87, high: 114.69, low: 85.66, close: 111.26 },
 ]);
+
+let positions = [];
+
+document.addEventListener("click", (e) => {
+  let position = chart.getMousePos(e);
+
+  positions.push(position);
+  if (positions.length === 3) positions = [position];
+
+  if (positions.length === 2) {
+    chart.paint.drawLine(positions[0], positions[1]);
+  }
+});

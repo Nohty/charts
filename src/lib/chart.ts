@@ -1,11 +1,13 @@
 import { drawLine, drawPoint } from "./graphics";
 import { remapPoint } from "./math";
 import { Bounds, CandleStickOptions, ChartOptions, DataPoint, DeepPartial, Point } from "./types";
+import { Paint } from "./paint";
 
 export class Chart {
   private options: ChartOptions;
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
+  private paint: Paint;
 
   private data: CandleStick[] = [];
 
@@ -30,6 +32,7 @@ export class Chart {
     this.canvas.style.backgroundColor = this.options.layout.backgroundColor;
     this.container.appendChild(this.canvas);
     this.ctx = this.canvas.getContext("2d")!;
+    this.paint = new Paint(this.ctx);
   }
 
   private getDataBounds(): Bounds {
