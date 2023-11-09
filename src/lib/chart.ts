@@ -13,7 +13,6 @@ export class Chart {
   private margin = 100;
 
   private readonly paint: Paint;
-  private readonly indicator: Indicator;
 
   constructor(private container: HTMLElement, options?: DeepPartial<ChartOptions>) {
     this.options = {
@@ -36,7 +35,6 @@ export class Chart {
     this.container.appendChild(this.canvas);
     this.ctx = this.canvas.getContext("2d")!;
     this.paint = new Paint(this.ctx);
-    this.indicator = new Indicator(this.ctx);
 
     this.dataTrans = {
       offset: [0, 0],
