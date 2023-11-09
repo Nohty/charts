@@ -32,6 +32,12 @@ document.querySelector("canvas").addEventListener("click", (e) => {
   }
 });
 
-document.querySelector("button").addEventListener("click", () => {
+document.querySelector("#remove-drawings").addEventListener("click", () => {
   chart.redraw();
+});
+
+// indicators 
+
+document.querySelector('#moving-average').addEventListener('click', () => {
+  chart.indicator.movingAverage(3);
 });

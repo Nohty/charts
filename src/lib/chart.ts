@@ -1,4 +1,5 @@
 import { CandleStick } from "./candlestick";
+import { Indicator } from "./indicator";
 import { distance, getNearest, remapPoint } from "./math";
 import { Paint } from "./paint";
 import { Bounds, ChartOptions, DataPoint, DeepPartial, Point } from "./types";
@@ -12,7 +13,8 @@ export class Chart {
 
   private margin = 100;
 
-  public readonly paint: Paint;
+  private readonly paint: Paint;
+  private readonly indicator: Indicator;
 
   constructor(private container: HTMLElement, options?: DeepPartial<ChartOptions>) {
     this.options = {
@@ -35,6 +37,7 @@ export class Chart {
     this.container.appendChild(this.canvas);
     this.ctx = this.canvas.getContext("2d")!;
     this.paint = new Paint(this.ctx);
+    this.indicator = new Indicator(this.ctx);
 
     this.addEventListeners();
   }
@@ -232,6 +235,7 @@ export class Chart {
   public setData(data: DataPoint[]): void {
     this.data = this.cleansingData(data).map((d) => new CandleStick(this.ctx, d));
     this.draw();
+    this.indicator.getData(this.data);
   }
 
   public addData(data: DataPoint[]): void {
