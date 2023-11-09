@@ -317,7 +317,6 @@ export class Chart {
   public setData(data: DataPoint[]): void {
     this.data = this.cleansingData(data).map((d) => new CandleStick(this.ctx, d));
     this.draw();
-    this.indicator.getData(this.data);
   }
 
   public addData(data: DataPoint[]): void {
