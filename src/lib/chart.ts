@@ -264,6 +264,51 @@ export class Chart {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
   }
 
+  private getNextItems(count: number, data: CandleStick[]): () => CandleStick[] {
+    let currentIndex = 0;
+
+    return function () {
+      const nextItems = data.slice(currentIndex, currentIndex + count);
+      currentIndex += count;
+
+      return nextItems;
+    };
+  }
+
+  private drawMovingAverage(result: Point[]): void {
+    console.log(result);
+
+    for (let i = 0; i < result.length; i++) {
+      if (i === result.length - 1) break;
+
+      const maLoc = remapPoint(this.getDataBounds(false), this.getPixelBounds(), result[i]);
+      const endLoc = remapPoint(this.getDataBounds(false), this.getPixelBounds(), result[i + 1]);
+
+      this.ctx.beginPath();
+      this.ctx.lineWidth = 1;
+      this.ctx.strokeStyle = "blue";
+
+      this.ctx.moveTo(maLoc[0], maLoc[1]);
+      this.ctx.lineTo(endLoc[0], endLoc[1]);
+      this.ctx.stroke();
+    }
+  }
+
+  public movingAverage(window: number): void {
+    const result: Point[] = [];
+
+    const getNext = this.getNextItems(window, this.data);
+
+    for (let i = 0; i < Math.ceil(this.data.length / window); i++) {
+      const arr = getNext();
+      const avarage = arr.reduce((acc, curr) => acc + curr.getDataPoint().close, 0) / arr.length;
+
+      result.push([arr[0].getDataPoint().time.getTime(), avarage]);
+    }
+
+    this.drawMovingAverage(result);
+  }
+
   public getMousePos(evt: MouseEvent, dataSpace: boolean = false): Point {
     const rect = this.canvas.getBoundingClientRect();
     const point: Point = [evt.clientX - rect.left, evt.clientY - rect.top];

@@ -40,14 +40,8 @@ function main() {
     chart.redraw();
   });
   
-  // indicators 
-  
   document.querySelector('#moving-average').addEventListener('click', () => {
-    chart.indicator.movingAverage(3);
-  });
-
-  document.querySelector("button").addEventListener("click", () => {
-    chart.redraw();
+    chart.movingAverage(3);
   });
 
   document.querySelector("#toggle-drawings").addEventListener("click", (e) => {
