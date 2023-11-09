@@ -1,13 +1,11 @@
 import { drawLine, drawPoint } from "./graphics";
 import { distance, getNearest, remapPoint } from "./math";
 import { Bounds, CandleStickOptions, ChartOptions, DataPoint, DeepPartial, Point } from "./types";
-import { Paint } from "./paint";
 
 export class Chart {
   private options: ChartOptions;
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
-  private paint: Paint;
 
   private data: CandleStick[] = [];
 
@@ -33,7 +31,6 @@ export class Chart {
     this.canvas.style.backgroundColor = this.options.layout.backgroundColor;
     this.container.appendChild(this.canvas);
     this.ctx = this.canvas.getContext("2d")!;
-    this.paint = new Paint(this.ctx);
     this.addEventListeners();
   }
 
@@ -232,6 +229,21 @@ export class Chart {
     this.data.push(...this.cleansingData(data).map((d) => new CandleStick(this.ctx, d)));
     this.draw();
   }
+
+  public drawLine(startPos: Point, endPoint: Point): void {
+    this.ctx.beginPath();
+    this.ctx.moveTo(startPos[0], startPos[1]);
+    this.ctx.lineWidth = 1;
+    this.ctx.lineTo(endPoint[0], endPoint[1]);
+    this.ctx.strokeStyle = 'black';
+    this.ctx.stroke();
+  }
+
+  public removeDrawings(): void {
+    this.ctx.clearRect(0, 0, this.options.width, this.options.height);
+    this.draw();
+  }
+
 }
 
 class CandleStick {

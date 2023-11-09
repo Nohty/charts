@@ -28,22 +28,10 @@ document.querySelector('canvas').addEventListener("click", (e) => {
   if (positions.length === 3) positions = [position];
 
   if (positions.length === 2) {
-    chart.paint.draw(positions[0], positions[1]);
+    chart.drawLine(positions[0], positions[1]);
   }
 });
 
-// remove drawings
-
-function init() {
-  document.querySelector('button').addEventListener('click', removeDraw);
-}
-
-function removeDraw() {
-  let canvasBack = document.querySelector('canvas');
-  canvasBack.width = chart.options.width;
-  canvasBack.height = chart.options.height;
-  canvasBack.ctx = chart.
-  chart.paint.removeDrawings();
-}
-
-init();
+document.querySelector("button").addEventListener("click", () => {
+  chart.removeDrawings();
+});
