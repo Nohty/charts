@@ -1,8 +1,8 @@
 import { Point } from "./types";
 
 export class Paint {
-
-    constructor(private ctx: CanvasRenderingContext2D) {}
+  
+  constructor(private ctx: CanvasRenderingContext2D) {}
 
     public draw(startPos: Point, endPoint: Point): void {
         this.ctx.beginPath();
