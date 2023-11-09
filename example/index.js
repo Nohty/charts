@@ -2,8 +2,7 @@ import { Chart } from "charts";
 
 const container = document.querySelector("#container");
 const chart = new Chart(container, { layout: { textColor: "black", backgroundColor: "white" } });
-
-chart.setData([
+const data = [
   { time: "2018-12-22", open: 75.16, high: 82.84, low: 36.16, close: 45.72 },
   { time: "2018-12-23", open: 45.12, high: 53.9, low: 45.12, close: 48.09 },
   { time: "2018-12-24", open: 60.71, high: 60.71, low: 53.39, close: 59.29 },
@@ -14,17 +13,25 @@ chart.setData([
   { time: "2018-12-29", open: 131.33, high: 151.17, low: 77.68, close: 96.43 },
   { time: "2018-12-30", open: 106.33, high: 110.2, low: 90.39, close: 98.1 },
   { time: "2018-12-31", open: 109.87, high: 114.69, low: 85.66, close: 111.26 },
-]);
+];
+
+chart.setData(data);
+
+// drawing
 
 let positions = [];
 
-document.addEventListener("click", (e) => {
+document.querySelector('canvas').addEventListener("click", (e) => {
   let position = chart.getMousePos(e);
 
   positions.push(position);
   if (positions.length === 3) positions = [position];
 
   if (positions.length === 2) {
-    chart.paint.drawLine(positions[0], positions[1]);
+    chart.drawLine(positions[0], positions[1]);
   }
+});
+
+document.querySelector("button").addEventListener("click", () => {
+  chart.removeDrawings();
 });
