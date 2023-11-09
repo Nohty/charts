@@ -1,6 +1,7 @@
-import { drawLine, drawPoint } from "./graphics";
+import { CandleStick } from "./candlestick";
 import { distance, getNearest, remapPoint } from "./math";
-import { Bounds, CandleStickOptions, ChartOptions, DataPoint, DeepPartial, Point } from "./types";
+import { Paint } from "./paint";
+import { Bounds, ChartOptions, DataPoint, DeepPartial, Point } from "./types";
 
 export class Chart {
   private options: ChartOptions;
@@ -10,6 +11,8 @@ export class Chart {
   private data: CandleStick[] = [];
 
   private margin = 100;
+
+  public readonly paint: Paint;
 
   constructor(private container: HTMLElement, options?: DeepPartial<ChartOptions>) {
     this.options = {
@@ -31,6 +34,8 @@ export class Chart {
     this.canvas.style.backgroundColor = this.options.layout.backgroundColor;
     this.container.appendChild(this.canvas);
     this.ctx = this.canvas.getContext("2d")!;
+    this.paint = new Paint(this.ctx);
+
     this.addEventListeners();
   }
 
@@ -212,6 +217,10 @@ export class Chart {
     }
   }
 
+  private clearChart(): void {
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+  }
+
   public getMousePos(evt: MouseEvent, dataSpace: boolean = false): Point {
     const rect = this.canvas.getBoundingClientRect();
     const point: Point = [evt.clientX - rect.left, evt.clientY - rect.top];
@@ -230,46 +239,8 @@ export class Chart {
     this.draw();
   }
 
-  public drawLine(startPos: Point, endPoint: Point): void {
-    this.ctx.beginPath();
-    this.ctx.moveTo(startPos[0], startPos[1]);
-    this.ctx.lineWidth = 1;
-    this.ctx.lineTo(endPoint[0], endPoint[1]);
-    this.ctx.strokeStyle = 'black';
-    this.ctx.stroke();
-  }
-
-  public removeDrawings(): void {
-    this.ctx.clearRect(0, 0, this.options.width, this.options.height);
+  public redraw(): void {
+    this.clearChart();
     this.draw();
-  }
-
-}
-
-class CandleStick {
-  constructor(private ctx: CanvasRenderingContext2D, private data: DataPoint) {}
-
-  public getDataPoint(): DataPoint {
-    return this.data;
-  }
-
-  public draw(dataBounds: Bounds, pixelBounds: Bounds, options: CandleStickOptions): void {
-    const openLoc = remapPoint(dataBounds, pixelBounds, [this.data.time.getTime(), this.data.open]);
-    const closeLoc = remapPoint(dataBounds, pixelBounds, [this.data.time.getTime(), this.data.close]);
-    const highLoc = remapPoint(dataBounds, pixelBounds, [this.data.time.getTime(), this.data.high]);
-    const lowLoc = remapPoint(dataBounds, pixelBounds, [this.data.time.getTime(), this.data.low]);
-
-    drawLine(this.ctx, highLoc, lowLoc, "gray", 2);
-
-    if (this.data.open > this.data.close) {
-      drawLine(this.ctx, openLoc, closeLoc, "red", 2 * options.width);
-    } else {
-      drawLine(this.ctx, openLoc, closeLoc, "green", 2 * options.width);
-    }
-
-    drawPoint(this.ctx, openLoc, options.pointColor, options.radius);
-    drawPoint(this.ctx, closeLoc, options.pointColor, options.radius);
-    drawPoint(this.ctx, highLoc, options.pointColor, options.radius);
-    drawPoint(this.ctx, lowLoc, options.pointColor, options.radius);
   }
 }
