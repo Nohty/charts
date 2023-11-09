@@ -36,8 +36,12 @@ function main() {
     }
   });
 
-  document.querySelector("button").addEventListener("click", () => {
+  document.querySelector("#remove-drawings").addEventListener("click", () => {
     chart.redraw();
+  });
+  
+  document.querySelector('#moving-average').addEventListener('click', () => {
+    chart.movingAverage(3);
   });
 
   document.querySelector("#toggle-drawings").addEventListener("click", (e) => {
