@@ -1,5 +1,4 @@
 import { CandleStick } from "./candlestick";
-import { Indicator } from "./indicator";
 import { distance, getNearest, lerp, remapPoint } from "./math";
 import { Paint } from "./paint";
 import { Bounds, ChartOptions, DataPoint, DataTrans, DeepPartial, Point } from "./types";
