@@ -21,17 +21,17 @@ chart.setData(data);
 
 let positions = [];
 
-document.querySelector('canvas').addEventListener("click", (e) => {
+document.querySelector("canvas").addEventListener("click", (e) => {
   let position = chart.getMousePos(e);
 
   positions.push(position);
   if (positions.length === 3) positions = [position];
 
   if (positions.length === 2) {
-    chart.drawLine(positions[0], positions[1]);
+    chart.paint.drawLine(positions[0], positions[1]);
   }
 });
 
 document.querySelector("button").addEventListener("click", () => {
-  chart.removeDrawings();
+  chart.redraw();
 });
