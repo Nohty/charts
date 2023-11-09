@@ -51,3 +51,8 @@ export type CandleStickOptions = {
   radius: number;
   pointColor: string;
 };
+
+export type DataTrans = {
+  offset: Point;
+  scale: number;
+};
