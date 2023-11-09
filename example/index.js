@@ -39,6 +39,10 @@ function init() {
 }
 
 function removeDraw() {
+  let canvasBack = document.querySelector('canvas');
+  canvasBack.width = chart.options.width;
+  canvasBack.height = chart.options.height;
+  canvasBack.ctx = chart.
   chart.paint.removeDrawings();
 }
 

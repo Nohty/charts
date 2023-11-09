@@ -155,6 +155,9 @@ export class Chart {
     if (dataSpace) return remapPoint(this.getPixelBounds(), this.getDataBounds(), point);
     else return point;
   }
+
+  public clear(): void {
+  }
 }
 
 class CandleStick {
