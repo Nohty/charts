@@ -1,15 +1,15 @@
 import { CandleStick } from "./candlestick";
-import { distance, getNearest, remapPoint } from "./math";
+import { distance, getNearest, lerp, remapPoint } from "./math";
 import { Paint } from "./paint";
-import { Bounds, ChartOptions, DataPoint, DeepPartial, Point } from "./types";
+import { Bounds, ChartOptions, DataPoint, DataTrans, DeepPartial, Point } from "./types";
 
 export class Chart {
   private options: ChartOptions;
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
+  private dataTrans: DataTrans;
 
   private data: CandleStick[] = [];
-
   private margin = 100;
 
   public readonly paint: Paint;
@@ -36,16 +36,37 @@ export class Chart {
     this.ctx = this.canvas.getContext("2d")!;
     this.paint = new Paint(this.ctx);
 
+    this.dataTrans = {
+      offset: [0, 0],
+      scale: 1,
+    };
+
     this.addEventListeners();
   }
 
-  private getDataBounds(): Bounds {
-    return {
+  private getDataBounds(normal: boolean = true): Bounds {
+    const bounds = {
       left: Math.min(...this.data.map((d) => d.getDataPoint().time.getTime())),
       right: Math.max(...this.data.map((d) => d.getDataPoint().time.getTime())),
       top: Math.max(...this.data.map((d) => d.getDataPoint().high)),
       bottom: Math.min(...this.data.map((d) => d.getDataPoint().low)),
     };
+
+    if (!normal) {
+      bounds.left = bounds.left + this.dataTrans.offset[0];
+      bounds.right = bounds.right + this.dataTrans.offset[0];
+      bounds.top = bounds.top + this.dataTrans.offset[1];
+      bounds.bottom = bounds.bottom + this.dataTrans.offset[1];
+
+      const center: Point = [(bounds.left + bounds.right) / 2, (bounds.top + bounds.bottom) / 2];
+
+      bounds.left = lerp(center[0], bounds.left, this.dataTrans.scale ** 2);
+      bounds.right = lerp(center[0], bounds.right, this.dataTrans.scale ** 2);
+      bounds.top = lerp(center[1], bounds.top, this.dataTrans.scale ** 2);
+      bounds.bottom = lerp(center[1], bounds.bottom, this.dataTrans.scale ** 2);
+    }
+
+    return bounds;
   }
 
   private getPixelBounds(): Bounds {
@@ -66,7 +87,11 @@ export class Chart {
 
   private draw(): void {
     for (const candleStick of this.data) {
-      candleStick.draw(this.getDataBounds(), this.getPixelBounds(), { radius: 2, width: 10, pointColor: "333" });
+      candleStick.draw(this.getDataBounds(false), this.getPixelBounds(), {
+        radius: 2,
+        width: 10 / this.dataTrans.scale,
+        pointColor: "333",
+      });
     }
 
     this.drawAxes();
@@ -76,6 +101,9 @@ export class Chart {
     const { bottom, left, right, top } = this.getPixelBounds();
     const yMid = (bottom + top) / 2;
     const xMid = (left + right) / 2;
+
+    this.ctx.clearRect(0, top - 50, left - 50, bottom + 50);
+    this.ctx.clearRect(left - 100, bottom + 5, right + 100, bottom + 50);
 
     // y as
     this.drawAs([left - 50, left - 50], [left - 50, bottom + 50], "Price $", top - 40, left - 100);
@@ -157,19 +185,19 @@ export class Chart {
         const mousePos = this.getMousePos(e);
 
         const points = this.data.flatMap((d) => [
-          remapPoint(this.getDataBounds(), this.getPixelBounds(), [
+          remapPoint(this.getDataBounds(false), this.getPixelBounds(), [
             d.getDataPoint().time.getTime(),
             d.getDataPoint().open,
           ]),
-          remapPoint(this.getDataBounds(), this.getPixelBounds(), [
+          remapPoint(this.getDataBounds(false), this.getPixelBounds(), [
             d.getDataPoint().time.getTime(),
             d.getDataPoint().high,
           ]),
-          remapPoint(this.getDataBounds(), this.getPixelBounds(), [
+          remapPoint(this.getDataBounds(false), this.getPixelBounds(), [
             d.getDataPoint().time.getTime(),
             d.getDataPoint().low,
           ]),
-          remapPoint(this.getDataBounds(), this.getPixelBounds(), [
+          remapPoint(this.getDataBounds(false), this.getPixelBounds(), [
             d.getDataPoint().time.getTime(),
             d.getDataPoint().close,
           ]),
@@ -179,12 +207,24 @@ export class Chart {
         const nearest = this.data[Math.floor(index / 4)].getDataPoint();
         const distanceToNearest = distance(points[index], mousePos);
 
-        if (distanceToNearest < this.margin / 5) {
+        if (distanceToNearest < this.margin / 10 / this.dataTrans.scale) {
           this.displayTooltip(nearest, mousePos);
         } else {
           this.displayTooltip(null);
         }
       }
+    });
+
+    this.canvas.addEventListener("wheel", (e: WheelEvent) => {
+      e.preventDefault();
+
+      const direction = Math.sign(e.deltaY);
+      const step = 0.02;
+
+      this.dataTrans.scale += direction * step;
+      this.dataTrans.scale = Math.max(step, Math.min(2, this.dataTrans.scale));
+
+      this.redraw();
     });
   }
 
@@ -242,5 +282,10 @@ export class Chart {
   public redraw(): void {
     this.clearChart();
     this.draw();
+  }
+
+  public resetScale(): void {
+    this.dataTrans.scale = 1;
+    this.redraw();
   }
 }
