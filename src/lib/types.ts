@@ -60,6 +60,4 @@ export type DataTrans = {
 export type DragState = {
   dragging: boolean;
   start: Point;
-  end: Point;
-  offset: Point;
 };
