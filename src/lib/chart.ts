@@ -1,7 +1,6 @@
 import { CandleStick } from "./candlestick";
-import { add, distance, getNearest, lerp, remapPoint, scale, subtract } from "./math";
-import { Paint } from "./paint";
-import { Bounds, ChartOptions, DataPoint, DataTrans, DeepPartial, DragState, Point } from "./types";
+import { distance, getNearest, lerp, remapPoint, subtract } from "./math";
+import { Bounds, ChartOptions, DataPoint, DataTrans, DeepPartial, DragState, PersistentData, Point } from "./types";
 
 export class Chart {
   private options: ChartOptions;
@@ -9,11 +8,10 @@ export class Chart {
   private ctx: CanvasRenderingContext2D;
   private dataTrans: DataTrans;
   private dragState: DragState;
+  private persistentData: PersistentData;
 
   private data: CandleStick[] = [];
   private margin = 100;
-
-  private readonly paint: Paint;
 
   constructor(private container: HTMLElement, options?: DeepPartial<ChartOptions>) {
     this.options = {
@@ -35,7 +33,11 @@ export class Chart {
     this.canvas.style.backgroundColor = this.options.layout.backgroundColor;
     this.container.appendChild(this.canvas);
     this.ctx = this.canvas.getContext("2d")!;
-    this.paint = new Paint(this.ctx);
+
+    this.persistentData = {
+      lines: [],
+      movingAverage: -1,
+    };
 
     this.dataTrans = {
       offset: [0, 0],
@@ -98,6 +100,14 @@ export class Chart {
         width: 10 / this.dataTrans.scale,
         pointColor: "333",
       });
+    }
+
+    if (this.persistentData.movingAverage !== -1) {
+      this.movingAverage(this.persistentData.movingAverage);
+    }
+
+    for (const line of this.persistentData.lines) {
+      this.drawLine(line[0], line[1]);
     }
 
     this.drawAxes();
@@ -318,7 +328,7 @@ export class Chart {
     }
   }
 
-  public movingAverage(window: number): void {
+  private movingAverage(window: number): void {
     const result: Point[] = [];
 
     const getNext = this.getNextItems(window, this.data);
@@ -333,11 +343,43 @@ export class Chart {
     this.drawMovingAverage(result);
   }
 
-  public getMousePos(evt: MouseEvent, dataSpace: boolean = false): Point {
+  private drawLine(startPos: Point, endPoint: Point): void {
+    const start = remapPoint(this.getDataBounds(false), this.getPixelBounds(), startPos);
+    const end = remapPoint(this.getDataBounds(false), this.getPixelBounds(), endPoint);
+
+    this.ctx.beginPath();
+    this.ctx.moveTo(start[0], start[1]);
+    this.ctx.lineTo(end[0], end[1]);
+    this.ctx.lineWidth = 1;
+    this.ctx.strokeStyle = "black";
+    this.ctx.stroke();
+  }
+
+  public addLine(startPos: Point, endPoint: Point): void {
+    this.persistentData.lines.push([startPos, endPoint]);
+    this.drawLine(startPos, endPoint);
+  }
+
+  public getLines(): [Point, Point][] {
+    return this.persistentData.lines;
+  }
+
+  /**
+   * Removes a line from the chart.
+   * @param index The index of the line to remove. If -1, all lines will be removed.
+   */
+  public removeLine(index: number): void {
+    if (index === -1) this.persistentData.lines = [];
+    else this.persistentData.lines.splice(index, 1);
+
+    this.redraw();
+  }
+
+  public getMousePos(evt: MouseEvent, dataSpace: boolean = false, normal: boolean = true): Point {
     const rect = this.canvas.getBoundingClientRect();
     const point: Point = [evt.clientX - rect.left, evt.clientY - rect.top];
 
-    if (dataSpace) return remapPoint(this.getPixelBounds(), this.getDataBounds(), point);
+    if (dataSpace) return remapPoint(this.getPixelBounds(), this.getDataBounds(normal), point);
     else return point;
   }
 
@@ -361,5 +403,23 @@ export class Chart {
     this.dataTrans.offset = [0, 0];
 
     this.redraw();
+  }
+
+  /**
+   * Sets the number of candles to use for the moving average.
+   * If the number is -1, the moving average will be disabled.
+   * @param count The number of candles to use for the moving average
+   */
+  public setMovingAverage(count: number): void {
+    this.persistentData.movingAverage = count;
+    this.redraw();
+  }
+
+  public getMovingAverage(): number {
+    return this.persistentData.movingAverage;
+  }
+
+  public setTooltipEnabled(enabled: boolean): void {
+    this.options.tooltipEnabled = enabled;
   }
 }
