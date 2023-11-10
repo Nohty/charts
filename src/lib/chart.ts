@@ -1,13 +1,14 @@
 import { CandleStick } from "./candlestick";
 import { distance, getNearest, lerp, remapPoint } from "./math";
 import { Paint } from "./paint";
-import { Bounds, ChartOptions, DataPoint, DataTrans, DeepPartial, Point } from "./types";
+import { Bounds, ChartOptions, DataPoint, DataTrans, DeepPartial, DragState, Point } from "./types";
 
 export class Chart {
   private options: ChartOptions;
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
   private dataTrans: DataTrans;
+  private dragState: DragState;
 
   private data: CandleStick[] = [];
   private margin = 100;
@@ -39,6 +40,13 @@ export class Chart {
     this.dataTrans = {
       offset: [0, 0],
       scale: 1,
+    };
+
+    this.dragState = {
+      dragging: false,
+      start: [0, 0],
+      end: [0, 0],
+      offset: [0, 0],
     };
 
     this.addEventListeners();
@@ -178,6 +186,16 @@ export class Chart {
   }
 
   private addEventListeners(): void {
+    this.canvas.addEventListener("mousedown", (e: MouseEvent) => {
+      e.preventDefault();
+
+      const dataLoc = this.getMousePos(e, true);
+      this.dragState.start = dataLoc;
+      this.dragState.end = dataLoc;
+      this.dragState.offset = this.dataTrans.offset;
+      this.dragState.dragging = true;
+    });
+
     this.canvas.addEventListener("mousemove", (e: MouseEvent) => {
       e.preventDefault();
 
@@ -308,7 +326,7 @@ export class Chart {
     const rect = this.canvas.getBoundingClientRect();
     const point: Point = [evt.clientX - rect.left, evt.clientY - rect.top];
 
-    if (dataSpace) return remapPoint(this.getPixelBounds(), this.getDataBounds(), point);
+    if (dataSpace) return remapPoint(this.getPixelBounds(), this.getDataBounds(false), point);
     else return point;
   }
 
