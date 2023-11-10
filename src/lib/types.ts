@@ -56,3 +56,8 @@ export type DataTrans = {
   offset: Point;
   scale: number;
 };
+
+export type DragState = {
+  dragging: boolean;
+  start: Point;
+};

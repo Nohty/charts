@@ -1,13 +1,14 @@
 import { CandleStick } from "./candlestick";
-import { distance, getNearest, lerp, remapPoint } from "./math";
+import { add, distance, getNearest, lerp, remapPoint, scale, subtract } from "./math";
 import { Paint } from "./paint";
-import { Bounds, ChartOptions, DataPoint, DataTrans, DeepPartial, Point } from "./types";
+import { Bounds, ChartOptions, DataPoint, DataTrans, DeepPartial, DragState, Point } from "./types";
 
 export class Chart {
   private options: ChartOptions;
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
   private dataTrans: DataTrans;
+  private dragState: DragState;
 
   private data: CandleStick[] = [];
   private margin = 100;
@@ -39,6 +40,11 @@ export class Chart {
     this.dataTrans = {
       offset: [0, 0],
       scale: 1,
+    };
+
+    this.dragState = {
+      dragging: false,
+      start: [0, 0],
     };
 
     this.addEventListeners();
@@ -178,6 +184,19 @@ export class Chart {
   }
 
   private addEventListeners(): void {
+    this.canvas.addEventListener("mousedown", (e: MouseEvent) => {
+      e.preventDefault();
+
+      this.dragState.dragging = true;
+      this.dragState.start = this.getMousePos(e, true);
+    });
+
+    this.canvas.addEventListener("mouseup", (e: MouseEvent) => {
+      e.preventDefault();
+
+      this.dragState.dragging = false;
+    });
+
     this.canvas.addEventListener("mousemove", (e: MouseEvent) => {
       e.preventDefault();
 
@@ -212,6 +231,16 @@ export class Chart {
         } else {
           this.displayTooltip(null);
         }
+      }
+
+      if (this.dragState.dragging) {
+        const mousePos = this.getMousePos(e, true);
+        const delta = subtract(mousePos, this.dragState.start);
+
+        this.dragState.start = mousePos;
+        this.dataTrans.offset = subtract(this.dataTrans.offset, delta);
+
+        this.redraw();
       }
     });
 
@@ -273,8 +302,6 @@ export class Chart {
   }
 
   private drawMovingAverage(result: Point[]): void {
-    console.log(result);
-
     for (let i = 0; i < result.length; i++) {
       if (i === result.length - 1) break;
 
@@ -331,6 +358,8 @@ export class Chart {
 
   public resetScale(): void {
     this.dataTrans.scale = 1;
+    this.dataTrans.offset = [0, 0];
+
     this.redraw();
   }
 }
