@@ -52,6 +52,11 @@ export type CandleStickOptions = {
   pointColor: string;
 };
 
+export type PersistentData = {
+  lines: [Point, Point][];
+  movingAverage: number;
+};
+
 export type DataTrans = {
   offset: Point;
   scale: number;

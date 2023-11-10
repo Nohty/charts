@@ -1,20 +1,26 @@
 import { CandleStick } from "./candlestick";
-import { add, distance, getNearest, lerp, remapPoint, scale, subtract } from "./math";
-import { Paint } from "./paint";
-import { Bounds, ChartOptions, DataPoint, DataTrans, DeepPartial, DragState, Point } from "./types";
+import { distance, getNearest, lerp, remapPoint, subtract } from "./math";
+import { Bounds, ChartOptions, DataPoint, DataTrans, DeepPartial, DragState, PersistentData, Point } from "./types";
 
+/**
+ * The chart class. This class is used to create a chart.
+ */
 export class Chart {
   private options: ChartOptions;
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
   private dataTrans: DataTrans;
   private dragState: DragState;
+  private persistentData: PersistentData;
 
   private data: CandleStick[] = [];
   private margin = 100;
 
-  private readonly paint: Paint;
-
+  /**
+   * Creates a new chart. The chart will be put in the given container.
+   * @param container - The container to put the chart in.
+   * @param options - The options for the chart.
+   */
   constructor(private container: HTMLElement, options?: DeepPartial<ChartOptions>) {
     this.options = {
       width: 1200,
@@ -35,7 +41,11 @@ export class Chart {
     this.canvas.style.backgroundColor = this.options.layout.backgroundColor;
     this.container.appendChild(this.canvas);
     this.ctx = this.canvas.getContext("2d")!;
-    this.paint = new Paint(this.ctx);
+
+    this.persistentData = {
+      lines: [],
+      movingAverage: -1,
+    };
 
     this.dataTrans = {
       offset: [0, 0],
@@ -50,6 +60,11 @@ export class Chart {
     this.addEventListeners();
   }
 
+  /**
+   * Gets the bounds of the data. The bounds can be returned in normal space or data space.
+   * @param normal - Whether or not to get the data bounds in normal space.
+   * @returns The bounds of the data.
+   */
   private getDataBounds(normal: boolean = true): Bounds {
     const bounds = {
       left: Math.min(...this.data.map((d) => d.getDataPoint().time.getTime())),
@@ -75,6 +90,10 @@ export class Chart {
     return bounds;
   }
 
+  /**
+   * Gets the bounds of the chart in pixel space.
+   * @returns The bounds of the chart in pixel space.
+   */
   private getPixelBounds(): Bounds {
     return {
       left: this.margin,
@@ -84,6 +103,11 @@ export class Chart {
     };
   }
 
+  /**
+   * Cleanses the data. This will convert the time to a date if it is not already a date.
+   * @param data - The data to cleanse.
+   * @returns The cleansed data.
+   */
   private cleansingData(data: DataPoint[]): DataPoint[] {
     return data.map((d) => {
       if (d.time instanceof Date) return d;
@@ -91,6 +115,9 @@ export class Chart {
     });
   }
 
+  /**
+   * Draws the chart. This will draw the data, moving average and lines.
+   */
   private draw(): void {
     for (const candleStick of this.data) {
       candleStick.draw(this.getDataBounds(false), this.getPixelBounds(), {
@@ -100,9 +127,20 @@ export class Chart {
       });
     }
 
+    if (this.persistentData.movingAverage !== -1) {
+      this.movingAverage(this.persistentData.movingAverage);
+    }
+
+    for (const line of this.persistentData.lines) {
+      this.drawLine(line[0], line[1]);
+    }
+
     this.drawAxes();
   }
 
+  /**
+   * Draws the axes on the chart.
+   */
   private drawAxes(): void {
     const { bottom, left, right, top } = this.getPixelBounds();
     const yMid = (bottom + top) / 2;
@@ -120,6 +158,15 @@ export class Chart {
     this.drawXAsData(left, right, bottom, xMid);
   }
 
+  /**
+   * Draws a line on the chart. The line can be drawn as the x as or the y as.
+   * @param moveTo - The start position of the line.
+   * @param lineTo - The end position of the line.
+   * @param label - The label to display.
+   * @param midPoint - The middle of the chart.
+   * @param fillTextCor - The fill text cor.
+   * @param xAs - Whether or not to draw the line as the x as.
+   */
   private drawAs(
     moveTo: Point,
     lineTo: Point,
@@ -143,6 +190,13 @@ export class Chart {
     }
   }
 
+  /**
+   * Draws prices on the chart (y as).
+   * @param top - The top of the chart.
+   * @param bottom - The bottom of the chart.
+   * @param left - The left side of the chart.
+   * @param midPoint - The middle of the chart.
+   */
   private drawYAsData(top: number, bottom: number, left: number, midPoint: number): void {
     let high = 0;
     let low = 100; // must be a high number because it needs to be higher then the lowest number in the data
@@ -163,6 +217,13 @@ export class Chart {
     this.ctx.fillText(mid.toString(), left - 100, midPoint);
   }
 
+  /**
+   * Draws dates on the chart (x as).
+   * @param left - The left side of the chart.
+   * @param right - The right side of the chart.
+   * @param bottom - The bottom of the chart.
+   * @param xMid - The middle of the chart.
+   */
   private drawXAsData(left: number, right: number, bottom: number, xMid: number): void {
     const midPointData = this.data.length / 2;
 
@@ -176,6 +237,11 @@ export class Chart {
     this.ctx.fillText(endDate, right, bottom + 30);
   }
 
+  /**
+   * Gets the date to display for the given index.
+   * @param index - The index of the data point to get the date to display for.
+   * @returns The date to display for the given index.
+   */
   private getDateToDisplay(index: number): string {
     const dateSplit = this.data[index].getDataPoint().time.toString().split(" ");
     const result = dateSplit[0] + " " + dateSplit[1] + " " + dateSplit[2];
@@ -183,7 +249,11 @@ export class Chart {
     return result;
   }
 
+  /**
+   * Adds event listeners to the chart.
+   */
   private addEventListeners(): void {
+    // start dragging
     this.canvas.addEventListener("mousedown", (e: MouseEvent) => {
       e.preventDefault();
 
@@ -191,12 +261,14 @@ export class Chart {
       this.dragState.start = this.getMousePos(e, true);
     });
 
+    // stop dragging
     this.canvas.addEventListener("mouseup", (e: MouseEvent) => {
       e.preventDefault();
 
       this.dragState.dragging = false;
     });
 
+    // tooltip and dragging
     this.canvas.addEventListener("mousemove", (e: MouseEvent) => {
       e.preventDefault();
 
@@ -244,6 +316,7 @@ export class Chart {
       }
     });
 
+    // zooming
     this.canvas.addEventListener("wheel", (e: WheelEvent) => {
       e.preventDefault();
 
@@ -257,6 +330,11 @@ export class Chart {
     });
   }
 
+  /**
+   * Displays the tooltip for the given data point. If the data point is null, the tooltip will be removed.
+   * @param dataPoint - The data point to display the tooltip for.
+   * @param mousePos - The mouse position to display the tooltip at.
+   */
   private displayTooltip(dataPoint: DataPoint | null, mousePos?: Point): void {
     const tooltip = this.container.querySelector("span");
     if (tooltip) this.container.removeChild(tooltip);
@@ -286,10 +364,19 @@ export class Chart {
     }
   }
 
+  /**
+   * Clears the chart.
+   */
   private clearChart(): void {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
   }
 
+  /**
+   * Gets the next n items from the data.
+   * @param count - The number of items to get.
+   * @param data - The data to get the items from.
+   * @returns A function that returns the next n items from the data.
+   */
   private getNextItems(count: number, data: CandleStick[]): () => CandleStick[] {
     let currentIndex = 0;
 
@@ -301,6 +388,10 @@ export class Chart {
     };
   }
 
+  /**
+   * Draws the moving average on the chart.
+   * @param result - The result of the moving average.
+   */
   private drawMovingAverage(result: Point[]): void {
     for (let i = 0; i < result.length; i++) {
       if (i === result.length - 1) break;
@@ -318,7 +409,11 @@ export class Chart {
     }
   }
 
-  public movingAverage(window: number): void {
+  /**
+   * Calculates the moving average for the chart. The moving average is calculated by taking the average of the last n candles.
+   * @param window - The number of candles to use for the moving average.
+   */
+  private movingAverage(window: number): void {
     const result: Point[] = [];
 
     const getNext = this.getNextItems(window, this.data);
@@ -333,33 +428,129 @@ export class Chart {
     this.drawMovingAverage(result);
   }
 
-  public getMousePos(evt: MouseEvent, dataSpace: boolean = false): Point {
+  /**
+   * Draws a line on the chart.
+   * @param startPos - The start position of the line.
+   * @param endPoint - The end position of the line.
+   */
+  private drawLine(startPos: Point, endPoint: Point): void {
+    const start = remapPoint(this.getDataBounds(false), this.getPixelBounds(), startPos);
+    const end = remapPoint(this.getDataBounds(false), this.getPixelBounds(), endPoint);
+
+    this.ctx.beginPath();
+    this.ctx.moveTo(start[0], start[1]);
+    this.ctx.lineTo(end[0], end[1]);
+    this.ctx.lineWidth = 1;
+    this.ctx.strokeStyle = "black";
+    this.ctx.stroke();
+  }
+
+  /**
+   * Adds a line to the chart.
+   * @param startPos - The start position of the line.
+   * @param endPoint - The end position of the line.
+   */
+  public addLine(startPos: Point, endPoint: Point): void {
+    this.persistentData.lines.push([startPos, endPoint]);
+    this.drawLine(startPos, endPoint);
+  }
+
+  /**
+   * Gets the lines on the chart.
+   * @returns The lines on the chart.
+   */
+  public getLines(): [Point, Point][] {
+    return this.persistentData.lines;
+  }
+
+  /**
+   * Removes a line from the chart.
+   * @param index - The index of the line to remove. If -1, all lines will be removed.
+   */
+  public removeLine(index: number): void {
+    if (index === -1) this.persistentData.lines = [];
+    else this.persistentData.lines.splice(index, 1);
+
+    this.redraw();
+  }
+
+  /**
+   * Gets the mouse position. The mouse position can be returned in data space or normal space.
+   * If data space is true, the mouse position will be returned in data space else it will be returned in pixel space.
+   * When data space is true, the mouse position can also be returned in normal space.
+   * Normal space is the mouse position in data space but scaled and offset to fit the chart.
+   * @param evt - The mouse event.
+   * @param dataSpace - Whether or not to return the mouse position in data space.
+   * @param normal - Whether or not to return the mouse position in normal space.
+   * @returns - The mouse position.
+   */
+  public getMousePos(evt: MouseEvent, dataSpace: boolean = false, normal: boolean = true): Point {
     const rect = this.canvas.getBoundingClientRect();
     const point: Point = [evt.clientX - rect.left, evt.clientY - rect.top];
 
-    if (dataSpace) return remapPoint(this.getPixelBounds(), this.getDataBounds(), point);
+    if (dataSpace) return remapPoint(this.getPixelBounds(), this.getDataBounds(normal), point);
     else return point;
   }
 
+  /**
+   * Sets the data for the chart. This will replace any existing data.
+   * @param data - The data to set for the chart.
+   */
   public setData(data: DataPoint[]): void {
     this.data = this.cleansingData(data).map((d) => new CandleStick(this.ctx, d));
     this.draw();
   }
 
+  /**
+   * Adds data to the chart. The data will be added to the end of the chart.
+   * @param data - The data to add to the chart.
+   */
   public addData(data: DataPoint[]): void {
     this.data.push(...this.cleansingData(data).map((d) => new CandleStick(this.ctx, d)));
     this.draw();
   }
 
+  /**
+   * Redraws the chart.
+   */
   public redraw(): void {
     this.clearChart();
     this.draw();
   }
 
+  /**
+   * Resets the scale and offset of the chart.
+   */
   public resetScale(): void {
     this.dataTrans.scale = 1;
     this.dataTrans.offset = [0, 0];
 
     this.redraw();
+  }
+
+  /**
+   * Sets the number of candles to use for the moving average.
+   * If the number is -1, the moving average will be disabled.
+   * @param count - The number of candles to use for the moving average
+   */
+  public setMovingAverage(count: number): void {
+    this.persistentData.movingAverage = count;
+    this.redraw();
+  }
+
+  /**
+   * Gets the number of candles used for the moving average.
+   * @returns The number of candles used for the moving average.
+   */
+  public getMovingAverage(): number {
+    return this.persistentData.movingAverage;
+  }
+
+  /**
+   * Enables or disables the tooltip.
+   * @param enabled - Whether or not to enable the tooltip.
+   */
+  public setTooltipEnabled(enabled: boolean): void {
+    this.options.tooltipEnabled = enabled;
   }
 }

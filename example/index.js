@@ -25,23 +25,27 @@ function main() {
 
   document.querySelector("canvas").addEventListener("click", (e) => {
     if (drawingsEnabled) {
-      let position = chart.getMousePos(e);
+      let position = chart.getMousePos(e, true, false);
 
       positions.push(position);
       if (positions.length === 3) positions = [position];
 
       if (positions.length === 2) {
-        chart.paint.drawLine(positions[0], positions[1]);
+        chart.addLine(positions[0], positions[1]);
       }
     }
   });
 
   document.querySelector("#remove-drawings").addEventListener("click", () => {
-    chart.redraw();
+    chart.removeLine(-1);
   });
-  
-  document.querySelector('#moving-average').addEventListener('click', () => {
-    chart.movingAverage(3);
+
+  document.querySelector("#toggle-moving-average").addEventListener("click", () => {
+    if (chart.getMovingAverage() === -1) {
+      chart.setMovingAverage(3);
+    } else {
+      chart.setMovingAverage(-1);
+    }
   });
 
   document.querySelector("#toggle-drawings").addEventListener("click", (e) => {
@@ -50,7 +54,7 @@ function main() {
     drawingsEnabled = !enabled;
   });
 
-  document.querySelector("#reset-scale").addEventListener("click", () => {
+  document.querySelector("#center-scale").addEventListener("click", () => {
     chart.resetScale();
   });
 }

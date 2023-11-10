@@ -5,10 +5,20 @@ import { Bounds, CandleStickOptions, DataPoint } from "./types";
 export class CandleStick {
   constructor(private ctx: CanvasRenderingContext2D, private data: DataPoint) {}
 
+  /**
+   * Gets the data point for the candlestick.
+   * @returns The data point for the candlestick.
+   */
   public getDataPoint(): DataPoint {
     return this.data;
   }
 
+  /**
+   * Draws the candlestick. The candlestick is drawn as a line from the high to the low, and a rectangle from the open to the close.
+   * @param dataBounds - The bounds of the data.
+   * @param pixelBounds - The bounds of the canvas.
+   * @param options - The options for the candlestick.
+   */
   public draw(dataBounds: Bounds, pixelBounds: Bounds, options: CandleStickOptions): void {
     const openLoc = remapPoint(dataBounds, pixelBounds, [this.data.time.getTime(), this.data.open]);
     const closeLoc = remapPoint(dataBounds, pixelBounds, [this.data.time.getTime(), this.data.close]);
