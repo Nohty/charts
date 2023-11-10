@@ -1,5 +1,5 @@
 import { CandleStick } from "./candlestick";
-import { distance, getNearest, lerp, remapPoint } from "./math";
+import { add, distance, getNearest, lerp, remapPoint, scale, subtract } from "./math";
 import { Paint } from "./paint";
 import { Bounds, ChartOptions, DataPoint, DataTrans, DeepPartial, DragState, Point } from "./types";
 
@@ -45,8 +45,6 @@ export class Chart {
     this.dragState = {
       dragging: false,
       start: [0, 0],
-      end: [0, 0],
-      offset: [0, 0],
     };
 
     this.addEventListeners();
@@ -189,11 +187,14 @@ export class Chart {
     this.canvas.addEventListener("mousedown", (e: MouseEvent) => {
       e.preventDefault();
 
-      const dataLoc = this.getMousePos(e, true);
-      this.dragState.start = dataLoc;
-      this.dragState.end = dataLoc;
-      this.dragState.offset = this.dataTrans.offset;
       this.dragState.dragging = true;
+      this.dragState.start = this.getMousePos(e, true);
+    });
+
+    this.canvas.addEventListener("mouseup", (e: MouseEvent) => {
+      e.preventDefault();
+
+      this.dragState.dragging = false;
     });
 
     this.canvas.addEventListener("mousemove", (e: MouseEvent) => {
@@ -230,6 +231,16 @@ export class Chart {
         } else {
           this.displayTooltip(null);
         }
+      }
+
+      if (this.dragState.dragging) {
+        const mousePos = this.getMousePos(e, true);
+        const delta = subtract(mousePos, this.dragState.start);
+
+        this.dragState.start = mousePos;
+        this.dataTrans.offset = subtract(this.dataTrans.offset, delta);
+
+        this.redraw();
       }
     });
 
@@ -326,7 +337,7 @@ export class Chart {
     const rect = this.canvas.getBoundingClientRect();
     const point: Point = [evt.clientX - rect.left, evt.clientY - rect.top];
 
-    if (dataSpace) return remapPoint(this.getPixelBounds(), this.getDataBounds(false), point);
+    if (dataSpace) return remapPoint(this.getPixelBounds(), this.getDataBounds(), point);
     else return point;
   }
 
@@ -347,6 +358,8 @@ export class Chart {
 
   public resetScale(): void {
     this.dataTrans.scale = 1;
+    this.dataTrans.offset = [0, 0];
+
     this.redraw();
   }
 }
