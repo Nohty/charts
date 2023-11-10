@@ -273,8 +273,6 @@ export class Chart {
   }
 
   private drawMovingAverage(result: Point[]): void {
-    console.log(result);
-
     for (let i = 0; i < result.length; i++) {
       if (i === result.length - 1) break;
 
