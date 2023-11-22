@@ -21,3 +21,6 @@ package-lock.json
 
 # example build output
 example/main.js
+
+#vscode
+.vscode
