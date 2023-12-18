@@ -225,7 +225,6 @@ export class Chart {
    */
   private drawXAsData(bottom: number): void {
     const dataBounds = this.getDataBounds(false);
-    const dataValues = this.getDataBounds(true);
     const pixelBounds = this.getPixelBounds();
 
     const minPixelDistance = 50;
@@ -233,12 +232,7 @@ export class Chart {
 
     const sortedData = [...this.data].sort((a, b) => a.getDataPoint().time.getTime() - b.getDataPoint().time.getTime());
 
-    const leftLoc = remapPoint(dataBounds, pixelBounds, [dataValues.left, 0]);
-    const rightLoc = remapPoint(dataBounds, pixelBounds, [dataValues.right, 0]);
-
     this.ctx.font = "1rem Arial";
-    this.ctx.fillText(dataValues.left.toString(), leftLoc[0], bottom);
-    this.ctx.fillText(dataValues.right.toString(), rightLoc[0], bottom);
 
     for (let i = 0; i < sortedData.length; i++) {
       const dataPoint = sortedData[i].getDataPoint();
