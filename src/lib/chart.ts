@@ -151,7 +151,7 @@ export class Chart {
     this.drawAs([0, top], [0, bottom], "Price", yMid, 0);
 
     // x as
-    this.drawXAsData(left, right, bottom, xMid);
+    this.drawXAsData(bottom);
     this.ctx.clearRect(0, bottom, this.canvas.width, this.canvas.height);
     this.drawAs([0, bottom], [right, bottom], "Date", xMid, bottom, true);
   }
@@ -196,7 +196,7 @@ export class Chart {
     const dataValues = this.getDataBounds(true);
     const pixelBounds = this.getPixelBounds();
 
-    const minPixelDistance = 25;
+    const minPixelDistance = 30;
     let drawnLabelYCoords: number[] = [];
 
     const sortedData = [...this.data].sort((a, b) => a.getDataPoint().open - b.getDataPoint().open);
@@ -221,25 +221,34 @@ export class Chart {
 
   /**
    * Draws dates on the chart (x as).
-   * @param left - The left side of the chart.
-   * @param right - The right side of the chart.
    * @param bottom - The bottom of the chart.
-   * @param xMid - The middle of the chart.
    */
-  private drawXAsData(left: number, right: number, bottom: number, xMid: number): void {
-    const bounds = this.getDataBounds(false);
-    const offset = 30;
+  private drawXAsData(bottom: number): void {
+    const dataBounds = this.getDataBounds(false);
+    const dataValues = this.getDataBounds(true);
+    const pixelBounds = this.getPixelBounds();
 
-    const midPointData = this.data.length / 2;
+    const minPixelDistance = 50;
+    let drawnLabelXCoords: number[] = [];
 
-    let startDate = this.getDateToDisplay(0);
-    let middelDate = this.getDateToDisplay(midPointData);
-    let endDate = this.getDateToDisplay(this.data.length - 1);
+    const sortedData = [...this.data].sort((a, b) => a.getDataPoint().time.getTime() - b.getDataPoint().time.getTime());
 
-    this.ctx.font = "1rem Arail";
-    this.ctx.fillText(startDate, bounds.left, bottom + offset);
-    this.ctx.fillText(middelDate, xMid, bottom + offset);
-    this.ctx.fillText(endDate, bounds.right, bottom + offset);
+    const leftLoc = remapPoint(dataBounds, pixelBounds, [dataValues.left, 0]);
+    const rightLoc = remapPoint(dataBounds, pixelBounds, [dataValues.right, 0]);
+
+    this.ctx.font = "1rem Arial";
+    this.ctx.fillText(dataValues.left.toString(), leftLoc[0], bottom);
+    this.ctx.fillText(dataValues.right.toString(), rightLoc[0], bottom);
+
+    for (let i = 0; i < sortedData.length; i++) {
+      const dataPoint = sortedData[i].getDataPoint();
+      const timeLoc = remapPoint(dataBounds, pixelBounds, [dataPoint.time.getTime(), 0]);
+
+      if (!drawnLabelXCoords.some((labelX) => Math.abs(timeLoc[0] - labelX) < minPixelDistance)) {
+        this.ctx.fillText(this.getDateToDisplay(i), timeLoc[0], bottom);
+        drawnLabelXCoords.push(timeLoc[0]);
+      }
+    }
   }
 
   /**
