@@ -143,36 +143,23 @@ export class Chart {
    */
   private drawAxes(): void {
     const { bottom, left, right, top } = this.getPixelBounds();
-    const yMid = (bottom + top) / 2;
-    const xMid = (left + right) / 2;
 
     // y as
     this.drawYAsData();
-    this.drawAs([0, top], [0, bottom], "Price", yMid, 0);
+    this.drawAs([0, top], [0, bottom]);
 
     // x as
     this.drawXAsData(bottom);
     this.ctx.clearRect(0, bottom, this.canvas.width, this.canvas.height);
-    this.drawAs([0, bottom], [right, bottom], "Date", xMid, bottom, true);
+    this.drawAs([0, bottom], [right, bottom]);
   }
 
   /**
    * Draws a line on the chart. The line can be drawn as the x as or the y as.
    * @param moveTo - The start position of the line.
    * @param lineTo - The end position of the line.
-   * @param label - The label to display.
-   * @param midPoint - The middle of the chart.
-   * @param fillTextCor - The fill text cor.
-   * @param xAs - Whether or not to draw the line as the x as.
    */
-  private drawAs(
-    moveTo: Point,
-    lineTo: Point,
-    label: string,
-    midPoint: number,
-    fillTextCor: number,
-    xAs: boolean = false
-  ): void {
+  private drawAs(moveTo: Point, lineTo: Point): void {
     this.ctx.beginPath();
     this.ctx.moveTo(moveTo[0], moveTo[1]);
     this.ctx.lineTo(lineTo[0], lineTo[1]);
@@ -180,12 +167,6 @@ export class Chart {
     this.ctx.strokeStyle = this.options.layout.textColor;
     this.ctx.stroke();
     this.ctx.font = "1rem Arail";
-
-    if (xAs) {
-      this.ctx.fillText(label, midPoint, fillTextCor);
-    } else {
-      this.ctx.fillText(label, fillTextCor, midPoint);
-    }
   }
 
   /**
