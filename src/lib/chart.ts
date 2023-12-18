@@ -1,5 +1,5 @@
 import { CandleStick } from "./candlestick";
-import { distance, getNearest, lerp, remapPoint, subtract } from "./math";
+import { distance, getNearest, lerp, remap, remapPoint, subtract } from "./math";
 import { Bounds, ChartOptions, DataPoint, DataTrans, DeepPartial, DragState, PersistentData, Point } from "./types";
 
 /**
@@ -143,98 +143,87 @@ export class Chart {
    */
   private drawAxes(): void {
     const { bottom, left, right, top } = this.getPixelBounds();
-    const yMid = (bottom + top) / 2;
-    const xMid = (left + right) / 2;
-
-    this.ctx.clearRect(0, top - 50, left - 50, bottom + 50);
-    this.ctx.clearRect(left - 100, bottom + 5, right + 100, bottom + 50);
 
     // y as
-    this.drawAs([left - 50, left - 50], [left - 50, bottom + 50], "Price $", top - 40, left - 100);
-    this.drawYAsData(top, bottom, left, yMid);
+    this.drawYAsData();
+    this.drawAs([0, top], [0, bottom]);
 
     // x as
-    this.drawAs([left - 100, bottom + 5], [right + 100, bottom + 5], "Date", xMid, bottom + 60, true);
-    this.drawXAsData(left, right, bottom, xMid);
+    this.drawXAsData(bottom);
+    this.ctx.clearRect(0, bottom, this.canvas.width, this.canvas.height);
+    this.drawAs([0, bottom], [right, bottom]);
   }
 
   /**
    * Draws a line on the chart. The line can be drawn as the x as or the y as.
    * @param moveTo - The start position of the line.
    * @param lineTo - The end position of the line.
-   * @param label - The label to display.
-   * @param midPoint - The middle of the chart.
-   * @param fillTextCor - The fill text cor.
-   * @param xAs - Whether or not to draw the line as the x as.
    */
-  private drawAs(
-    moveTo: Point,
-    lineTo: Point,
-    label: string,
-    midPoint: number,
-    fillTextCor: number,
-    xAs: boolean = false
-  ): void {
+  private drawAs(moveTo: Point, lineTo: Point): void {
     this.ctx.beginPath();
     this.ctx.moveTo(moveTo[0], moveTo[1]);
-    this.ctx.lineWidth = 1;
     this.ctx.lineTo(lineTo[0], lineTo[1]);
+    this.ctx.lineWidth = 1;
     this.ctx.strokeStyle = this.options.layout.textColor;
     this.ctx.stroke();
-
     this.ctx.font = "1rem Arail";
-    if (xAs) {
-      this.ctx.fillText(label, midPoint, fillTextCor);
-    } else {
-      this.ctx.fillText(label, fillTextCor, midPoint);
-    }
   }
 
   /**
    * Draws prices on the chart (y as).
-   * @param top - The top of the chart.
-   * @param bottom - The bottom of the chart.
-   * @param left - The left side of the chart.
-   * @param midPoint - The middle of the chart.
    */
-  private drawYAsData(top: number, bottom: number, left: number, midPoint: number): void {
-    let high = 0;
-    let low = 100; // must be a high number because it needs to be higher then the lowest number in the data
+  private drawYAsData(): void {
+    const dataBounds = this.getDataBounds(false);
+    const dataValues = this.getDataBounds(true);
+    const pixelBounds = this.getPixelBounds();
 
-    this.data.forEach((el) => {
-      if (el.getDataPoint().high > high) {
-        high = el.getDataPoint().high;
-      } else if (el.getDataPoint().low < low) {
-        low = el.getDataPoint().low;
+    const minPixelDistance = 30;
+    let drawnLabelYCoords: number[] = [];
+
+    const sortedData = [...this.data].sort((a, b) => a.getDataPoint().open - b.getDataPoint().open);
+
+    const topLoc = remapPoint(dataBounds, pixelBounds, [0, dataValues.top]);
+    const bottomLoc = remapPoint(dataBounds, pixelBounds, [0, dataValues.bottom]);
+
+    this.ctx.font = "1rem Arial";
+    this.ctx.fillText(dataValues.top.toString(), 0, topLoc[1]);
+    this.ctx.fillText(dataValues.bottom.toString(), 0, bottomLoc[1]);
+
+    for (let i = 0; i < sortedData.length; i++) {
+      const dataPoint = sortedData[i].getDataPoint();
+      const openLoc = remapPoint(dataBounds, pixelBounds, [dataPoint.time.getTime(), dataPoint.open]);
+
+      if (!drawnLabelYCoords.some((labelY) => Math.abs(openLoc[1] - labelY) < minPixelDistance)) {
+        this.ctx.fillText(dataPoint.open.toString(), 0, openLoc[1]);
+        drawnLabelYCoords.push(openLoc[1]);
       }
-    });
-
-    const mid = (high + low) / 2;
-
-    this.ctx.font = "1rem Arail";
-    this.ctx.fillText(high.toString(), left - 100, top);
-    this.ctx.fillText(low.toString(), left - 100, bottom);
-    this.ctx.fillText(mid.toString(), left - 100, midPoint);
+    }
   }
 
   /**
    * Draws dates on the chart (x as).
-   * @param left - The left side of the chart.
-   * @param right - The right side of the chart.
    * @param bottom - The bottom of the chart.
-   * @param xMid - The middle of the chart.
    */
-  private drawXAsData(left: number, right: number, bottom: number, xMid: number): void {
-    const midPointData = this.data.length / 2;
+  private drawXAsData(bottom: number): void {
+    const dataBounds = this.getDataBounds(false);
+    const pixelBounds = this.getPixelBounds();
 
-    let startDate = this.getDateToDisplay(0);
-    let middelDate = this.getDateToDisplay(midPointData);
-    let endDate = this.getDateToDisplay(this.data.length - 1);
+    const minPixelDistance = 50;
+    let drawnLabelXCoords: number[] = [];
 
-    this.ctx.font = "1rem Arail";
-    this.ctx.fillText(startDate, left, bottom + 30);
-    this.ctx.fillText(middelDate, xMid, bottom + 30);
-    this.ctx.fillText(endDate, right, bottom + 30);
+    const sortedData = [...this.data].sort((a, b) => a.getDataPoint().time.getTime() - b.getDataPoint().time.getTime());
+
+    this.ctx.font = "1rem Arial";
+
+    for (let i = 0; i < sortedData.length; i++) {
+      const dataPoint = sortedData[i].getDataPoint();
+      const timeLoc = remapPoint(dataBounds, pixelBounds, [dataPoint.time.getTime(), 0]);
+
+      if (!drawnLabelXCoords.some((labelX) => Math.abs(timeLoc[0] - labelX) < minPixelDistance)) {
+        this.ctx.fillText(this.getDateToDisplay(i), timeLoc[0], bottom);
+        drawnLabelXCoords.push(timeLoc[0]);
+      }
+    }
   }
 
   /**
