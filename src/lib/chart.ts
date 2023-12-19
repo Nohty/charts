@@ -1,6 +1,16 @@
 import { CandleStick } from "./candlestick";
 import { distance, getNearest, lerp, remap, remapPoint, subtract } from "./math";
-import { Bounds, ChartOptions, DataPoint, DataTrans, DeepPartial, DragState, PersistentData, Point } from "./types";
+import {
+  Bounds,
+  ChartOptions,
+  DataPoint,
+  DataRange,
+  DataTrans,
+  DeepPartial,
+  DragState,
+  PersistentData,
+  Point,
+} from "./types";
 
 /**
  * The chart class. This class is used to create a chart.
@@ -12,8 +22,9 @@ export class Chart {
   private dataTrans: DataTrans;
   private dragState: DragState;
   private persistentData: PersistentData;
+  private dataRange: DataRange;
 
-  private data: CandleStick[] = [];
+  private _data: CandleStick[] = [];
   private margin = 100;
 
   /**
@@ -31,6 +42,10 @@ export class Chart {
         backgroundColor: "#fff",
         pointColor: "#333",
         lineColor: "#333",
+      },
+      dataRange: {
+        start: 0,
+        amount: 0,
       },
       ...(options as Partial<ChartOptions>),
     };
@@ -57,7 +72,16 @@ export class Chart {
       start: [0, 0],
     };
 
+    this.dataRange = {
+      start: this.options.dataRange.start,
+      amount: this.options.dataRange.amount,
+    };
+
     this.addEventListeners();
+  }
+
+  get data(): CandleStick[] {
+    return this._data.slice(this.dataRange.start, this.dataRange.start + this.dataRange.amount);
   }
 
   /**
@@ -488,7 +512,13 @@ export class Chart {
    * @param data - The data to set for the chart.
    */
   public setData(data: DataPoint[]): void {
-    this.data = this.cleansingData(data).map((d) => new CandleStick(this.ctx, d));
+    this._data = this.cleansingData(data).map((d) => new CandleStick(this.ctx, d));
+
+    if (this.dataRange.amount === 0) {
+      this.dataRange.start = 0;
+      this.dataRange.amount = this.data.length;
+    }
+
     this.draw();
   }
 
@@ -497,8 +527,34 @@ export class Chart {
    * @param data - The data to add to the chart.
    */
   public addData(data: DataPoint[]): void {
-    this.data.push(...this.cleansingData(data).map((d) => new CandleStick(this.ctx, d)));
+    this._data.push(...this.cleansingData(data).map((d) => new CandleStick(this.ctx, d)));
+
+    if (this.dataRange.amount === 0) {
+      this.dataRange.start = 0;
+      this.dataRange.amount = this.data.length;
+    }
+
     this.draw();
+  }
+
+  /**
+   * Sets the data range for the chart.
+   * @param start - The start of the data range.
+   * @param end - The end of the data range.
+   */
+  public setDataRange(start: number, amount: number): void {
+    this.dataRange.start = start;
+    this.dataRange.amount = amount;
+
+    this.draw();
+  }
+
+  /**
+   * Gets the data range for the chart.
+   * @returns The data range for the chart.
+   */
+  public getDataRange(): DataRange {
+    return this.dataRange;
   }
 
   /**

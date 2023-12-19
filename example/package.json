@@ -8,7 +8,8 @@
     "build:watch": "webpack --entry ./index.js -o ./ --mode production --watch"
   },
   "dependencies": {
-    "charts": "file:../dist"
+    "charts": "file:../dist",
+    "fs": "0.0.1-security"
   },
   "devDependencies": {
     "ts-loader": "^9.5.0",
