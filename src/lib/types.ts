@@ -37,6 +37,7 @@ export type ChartOptions = {
   height: number;
   layout: ChartOptionsLayout;
   tooltipEnabled: boolean;
+  dataRange: DataRange;
 };
 
 export type ChartOptionsLayout = {
@@ -65,4 +66,9 @@ export type DataTrans = {
 export type DragState = {
   dragging: boolean;
   start: Point;
+};
+
+export type DataRange = {
+  start: number;
+  amount: number;
 };
