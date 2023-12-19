@@ -142,16 +142,18 @@ export class Chart {
    * Draws the axes on the chart.
    */
   private drawAxes(): void {
-    const { bottom, left, right, top } = this.getPixelBounds();
+    const { bottom, top } = this.getPixelBounds();
+    const offset = 10;
 
     // y as
     this.drawYAsData();
-    this.drawAs([0, top], [0, bottom]);
+    this.ctx.clearRect(0, 0, this.canvas.width, top - offset);
+    this.drawAs([0, top - offset], [0, bottom]);
 
     // x as
     this.drawXAsData(bottom);
     this.ctx.clearRect(0, bottom, this.canvas.width, this.canvas.height);
-    this.drawAs([0, bottom], [right, bottom]);
+    this.drawAs([0, bottom], [this.canvas.width, bottom]);
   }
 
   /**
@@ -208,7 +210,7 @@ export class Chart {
     const dataBounds = this.getDataBounds(false);
     const pixelBounds = this.getPixelBounds();
 
-    const minPixelDistance = 50;
+    const minPixelDistance = 80;
     let drawnLabelXCoords: number[] = [];
 
     const sortedData = [...this.data].sort((a, b) => a.getDataPoint().time.getTime() - b.getDataPoint().time.getTime());

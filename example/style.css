@@ -1,3 +1,27 @@
 #container {
   margin-left: 10%;
 }
+
+#toggle-drawings {
+  background-color: red;
+}
+
+#toggle-drawings:active {
+  background-color: green;
+}
+
+input[type="button"]{
+  background-color: #4CAF50;
+  border: none;
+  color: white;
+  padding: 1rem;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 1.25rem;
+  margin-left: 1rem;
+}
+
+input[type="button"]:first-child {
+  margin-left: 20%;
+}
