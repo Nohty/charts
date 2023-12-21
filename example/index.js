@@ -2,10 +2,15 @@ import { Chart } from "charts";
 
 async function main() {
   const container = document.querySelector("#container");
+
+  let candlestickStartAmount = document.querySelector("#candlestick-amount-start").value;
+  let candlestickAmount = document.querySelector("#candlestick-amount").value;
+
   const chart = new Chart(container, {
     layout: { textColor: "black", backgroundColor: "white" },
-    dataRange: { start: 100, amount: 100 },
+    dataRange: { start: parseInt(candlestickStartAmount), amount: parseInt(candlestickAmount) },
   });
+
 
   // use proxy to avoid CORS
   const chartMillUrl = "https://www.chartmill.com/chartmill-rest2/security/quotes/1496?ngsw-bypass";
@@ -62,6 +67,14 @@ async function main() {
 
   document.querySelector("#center-scale").addEventListener("click", () => {
     chart.resetScale();
+  });
+
+  document.querySelector("#update").addEventListener("click", (e) => {
+    e.preventDefault();
+    let candlestickStartAmount = document.querySelector("#candlestick-amount-start").value;
+    let candlestickAmount = document.querySelector("#candlestick-amount").value;
+
+    chart.setDataRange(parseInt(candlestickStartAmount), parseInt(candlestickAmount));
   });
 }
 

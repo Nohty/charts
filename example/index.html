@@ -10,9 +10,19 @@
   <body>
     <div id="container"></div>
 
-    <button id="remove-drawings">Remove drawings</button>
-    <input type="button" value="Toggle drawings" id="toggle-drawings" style="background-color: red" />
-    <input type="button" value="Center chart" id="center-scale" />
-    <input type="button" value="Toggle moving average" id="toggle-moving-average" />
+    <form>
+      <label for="candlestick-amount-start">How many candlesticks at the start: </label>
+      <input type="number" value="10" id="candlestick-amount-start" />
+      <label for="candlestick-amount">How many candlesticks: </label>
+      <input type="number" value="10" id="candlestick-amount" />
+      <input type="button" value="Update" id="update" />
+    </form>
+
+    <form>
+      <input type="button" value="Remove drawings" id="remove-drawings" />
+      <input type="button" value="Toggle drawings" id="toggle-drawings" />
+      <input type="button" value="Center chart" id="center-scale" />
+      <input type="button" value="Toggle moving average" id="toggle-moving-average" />
+    </form>
   </body>
 </html>
