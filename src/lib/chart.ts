@@ -540,7 +540,7 @@ export class Chart {
   /**
    * Sets the data range for the chart.
    * @param start - The start of the data range.
-   * @param end - The end of the data range.
+   
    */
   public setDataRange(start: number, amount: number): void {
     this.dataRange.start = start;

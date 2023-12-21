@@ -10,7 +10,7 @@
   background-color: green;
 }
 
-input[type="button"]{
+input[type="button"] {
   background-color: #4CAF50;
   border: none;
   color: white;
@@ -20,6 +20,7 @@ input[type="button"]{
   display: inline-block;
   font-size: 1.25rem;
   margin-left: 1rem;
+  margin-bottom: 3rem;
 }
 
 input[type="button"]:first-child {
