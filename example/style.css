@@ -21,6 +21,16 @@ input[type="button"] {
   font-size: 1.25rem;
   margin-left: 1rem;
   margin-bottom: 3rem;
+  cursor: pointer;
+}
+
+input[type="button"]:hover {
+  background-color: #3e8e41;
+}
+
+input[type="button"]:active {
+  background-color: #3e8e41;
+  transform: translateY(4px);
 }
 
 input[type="button"]:first-child {

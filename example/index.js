@@ -11,11 +11,11 @@ async function main() {
     dataRange: { start: parseInt(candlestickStartAmount), amount: parseInt(candlestickAmount) },
   });
 
+  const parm = new URLSearchParams({
+    url: "https://www.chartmill.com/chartmill-rest2/security/quotes/1496?ngsw-bypass",
+  });
 
-  // use proxy to avoid CORS
-  const chartMillUrl = "https://www.chartmill.com/chartmill-rest2/security/quotes/1496?ngsw-bypass";
-
-  const data = await fetch(chartMillUrl).then((res) => res.json());
+  const data = await fetch("http://localhost:8080?" + parm).then((res) => res.json());
 
   const newData = data.map((d) => {
     return {
