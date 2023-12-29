@@ -519,7 +519,7 @@ export class Chart {
       this.dataRange.amount = this.data.length;
     }
 
-    this.draw();
+    this.redraw();
   }
 
   /**
@@ -534,7 +534,7 @@ export class Chart {
       this.dataRange.amount = this.data.length;
     }
 
-    this.draw();
+    this.redraw();
   }
 
   /**
@@ -546,7 +546,7 @@ export class Chart {
     this.dataRange.start = start;
     this.dataRange.amount = amount;
 
-    this.draw();
+    this.redraw();
   }
 
   /**
